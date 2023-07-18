@@ -30,11 +30,11 @@ exports.Signup = async (req,res)=>{
         const hash=crypto.createHmac('sha256',"shazo").update(data).digest('hex');
       
         const accountSid = 'ACc7170e203cd0ac7314076ff4f7a06bd0';
-        const authToken = 'd040bfcca12c07d45d4c44bfa0f27add';
+        const authToken = 'a0449104035e03b2a368ccc27d302a87';//pass changed
         const client = twilio(accountSid, authToken);
         client.messages.create({
           body: `Your App OTP is ${otp} and hash: ${hash}.${expires}`,
-          from: +923204833506, // Twilio phone number
+          from: +19894479702, // Twilio phone number
           to: phoneNo // Recipient's phone number
          })
         .then(message => console.log('Message sent:', message.sid))
@@ -265,3 +265,100 @@ exports.deleteuser = async(req,res)=>{
     }
  
  }
+exports.likeUser = async(req,res)=>{
+try {
+     const{userId,fanId}= req.body;
+      const user = await User.findOne(userId)
+      // if(!user) 
+      //  { return res.status(400).send("no such user exists")}
+      const fan = await User.findOne(fanId);
+      // if(!fan)
+      //    { return res.status(400).send("no such fan user exists")}
+      console.log('user is',user)
+      console.log('fan user is',fan)
+       console.log('checking if user already liked')
+    //  console.log('user likes are',user.likes)
+      if(user.likes.includes(fan)){
+        return res.status(400).json({message:"User already liked by fan"})
+      }
+
+      
+      await user.likes.unshift(fan);
+      await user.save();
+      return res.status(200).json({message:"user liked by fan",user,fan});
+
+} catch (error) {
+  console.log(error)
+  res.status(400).json({error})
+}
+
+}
+
+// exports.likeUser = async (req, res) => {
+//   try {
+//     const { userid, fanid } = req.body;
+
+//     // Find the user by ID
+//     const user = await User.findById(userid);
+
+//     if (!user) {
+//       return res.status(404).json({ message: "No such user exists" });
+//     }
+
+//     // Find the fan user by ID
+//     const fan = await User.findById(fanid);
+
+//     if (!fan) {
+//       return res.status(404).json({ message: "No such fan user exists" });
+//     }
+
+//     console.log("Checking if user is already liked by the fan");
+//     console.log(user);
+
+//     // Check if the fan is already in the user's likes array
+//     if (user.likes.includes(fan._id)) {
+//       return res.status(400).json({ message: "User already liked by fan" });
+//     }
+
+//     // Add the fan ID to the user's likes array
+//     user.likes.push(fan._id);
+//     await user.save();
+
+//     return res
+//       .status(200)
+//       .json({ message: "User liked by fan", user: user, fan: fan });
+//   } catch (error) {
+//     console.error("Error occurred while liking user:", error);
+//     return res.status(500).json({ message: "Internal server error" });
+//   }
+// };
+
+exports.maxLiked = async (req,res)=>{
+  try {
+  
+   
+    const users = await User.find({})
+    console.log(users)
+    // res.status(200).json({users})
+    let maxlikes=0;
+    let KingId= "";
+    users.map(user=> {
+
+      if(maxlikes< user.likes.length){
+
+      maxlikes =user.likes.length
+      KingId =user._id
+     
+      }
+    });
+    console.log(KingId)
+    const kingUser = await User.findById(KingId)
+     console.log('most popular user is',kingUser)
+    res.status(200).json({message:"most popular in fans is:",kingUser})
+
+     
+  }catch(error){
+    console.log(error)
+    res.status(400).json({error})
+  }
+}

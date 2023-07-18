@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 const userSchema = mongoose.Schema({
- 
+_id:{type:String},
 name:{type:String},
 email:{type:String,required:true},
 password:{type:String},
@@ -19,6 +19,6 @@ profilePic:{type:String},
 coverPhoto:{type:String},
 userLevel:{type:String},
 isVIP:{type:Boolean},
-userStore:{type:Array}
+likes:{type:Array}
 })
 module.exports= mongoose.model('User',userSchema)

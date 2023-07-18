@@ -17,6 +17,9 @@ const User = require('./models/userModel')
 
 // Add these requires at the top of your `server.js` file
 const passport = require('passport');
+// Initialize Passport and restore authentication state, if any
+app.use(passport.initialize());
+app.use(passport.session());
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
 
@@ -156,9 +159,6 @@ app.get('/auth/facebook/callback', passport.authenticate('facebook', {
 
 
 
-// Initialize Passport and restore authentication state, if any
-app.use(passport.initialize());
-app.use(passport.session());
 
 const user= require('./routes/user')
 app.use('/',user)
