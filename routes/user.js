@@ -1,14 +1,15 @@
 const express=require('express')
 const router = express.Router()
 const passport= require('passport')
-const{Signup,login,verifyOtp,loginWithGoogle,loginWithFacebook,loginWithTwitter,getUser,updateuser,deleteuser,maxLiked,likeUser}= require('../controllers/userController')
+const{Signup,login,verifyOtp,loginWithGoogle,loginWithFacebook,
+  loginWithTwitter,getUser,updateuser,deleteuser,maxLiked,likeUser,levelUp,liveSession,luxuryGift,
+  luckyGift,fruitCoinGame}= require('../controllers/userController')
 
 router.post('/signup',Signup)
-router.post('/verifyotp',verifyOtp)
 router.post('/login',login)
 
 router.post('/loginwithgoogle',loginWithGoogle)
-// Google authentication route
+// Google authentication routexc
 router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }))
 
 // Google authentication callback route
@@ -39,7 +40,13 @@ router.get('/auth/twitter/callback', passport.authenticate('twitter', {
 router.get('/user/:id',getUser)
 router.post('/updateUser',updateuser)
 router.delete('/deleteuser/:id',deleteuser)
-router.post('/likeUser',likeUser)
+router.post('/:userId/likeUser',likeUser)
+// router.get('/likeuser/:userid/:fanid',likeUser)
 router.get('/getmaxlikes',maxLiked)
+router.post('/levelcheck',levelUp)
+router.post('/liveSession',liveSession)
+router.post('/luxuryGift',luxuryGift)
+router.post('/luckyGift',luckyGift)
+router.post('/fruitCoinGame',fruitCoinGame)
 
 module.exports= router

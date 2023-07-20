@@ -5,12 +5,16 @@ const crypto = require('crypto')
 const twilio= require('twilio')
 const bcrypt= require('bcrypt')
 const jwt = require('jsonwebtoken')
+const { v4: uuidv4 } = require('uuid')//mujha karan dou
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
+const { sendNotification } = require('../notifications/notificationService');
+const { readlinkSync } = require('fs');
+const _ = require('underscore');
 
 exports.Signup = async (req,res)=>{
 
-    const {name,email,password,phoneNo,profilePic,coverPhoto,gender,country,relationship}=req.body;
+    const {name,email,password,phoneNo,profilePic,coverPhoto,gender,country,relationship,coins}=req.body;
     try{
       
        if(!email || !password ){
@@ -42,7 +46,7 @@ exports.Signup = async (req,res)=>{
 
 
             const hashed =await bcrypt.hash(password,10);
-            const user =new User({name,email,password:hashed,phoneNo,profilePic,coverPhoto,gender,country,relationship});
+            const user =new User({name,email,password:hashed,phoneNo,profilePic,coverPhoto,gender,country,relationship,coins});
             await user.save();
             console.log('user registered')
           return  res.status(200).json({message:'User Signup in process.verify otp'});
@@ -265,34 +269,34 @@ exports.deleteuser = async(req,res)=>{
     }
  
  }
-exports.likeUser = async(req,res)=>{
-try {
-     const{userId,fanId}= req.body;
-      const user = await User.findOne(userId)
-      // if(!user) 
-      //  { return res.status(400).send("no such user exists")}
-      const fan = await User.findOne(fanId);
-      // if(!fan)
-      //    { return res.status(400).send("no such fan user exists")}
-      console.log('user is',user)
-      console.log('fan user is',fan)
-       console.log('checking if user already liked')
-    //  console.log('user likes are',user.likes)
-      if(user.likes.includes(fan)){
-        return res.status(400).json({message:"User already liked by fan"})
-      }
+// exports.likeUser = async(req,res)=>{
+// try {
+//      const{userId,fanId}= req.body;
+//       const user = await User.findById(userId)
+//       if(!user) 
+//        { return res.status(400).send("no such user exists")}
+//       const fan = await User.findById(fanId);
+//       if(!fan)
+//          { return res.status(400).send("no such fan user exists")}
+//       console.log('user is',user)
+//       console.log('fan user is',fan)
+//        console.log('checking if user already liked')
+//     //  console.log('user likes are',user.likes)
+//       if(user.likes.includes(fan)){
+//         return res.status(400).json({message:"User already liked by fan"})
+//       }
 
       
-      await user.likes.unshift(fan);
-      await user.save();
-      return res.status(200).json({message:"user liked by fan",user,fan});
+//       await user.likes.unshift(fan);
+//       await user.save();
+//       return res.status(200).json({message:"user liked by fan",user,fan});
 
-} catch (error) {
-  console.log(error)
-  res.status(400).json({error})
-}
+// } catch (error) {
+//   console.log(error)
+//   res.status(400).json({error})
+// }
 
-}
+// }
 
 // exports.likeUser = async (req, res) => {
 //   try {
@@ -332,7 +336,35 @@ try {
 //     return res.status(500).json({ message: "Internal server error" });
 //   }
 // };
-
+exports.likeUser = async(req,res)=>{
+  try {
+      const {userId} = req.params
+       const{fanId}= req.body;
+        const user = await User.findOne({userId})
+        // if(!user) 
+        //  { return res.status(400).send("no such user exists")}
+        const fan = await User.findOne(fanId);
+        // if(!fan)
+        //    { return res.status(400).send("no such fan user exists")}
+        console.log('user is',user)
+        console.log('fan user is',fan)
+         console.log('checking if user already liked')
+      //  console.log('user likes are',user.likes)
+        if(user.likes.includes(fan)){
+          return res.status(400).json({message:"User already liked by fan"})
+        }
+  
+        
+        await user.likes.unshift(fan);
+        await user.save();
+        return res.status(200).json({message:"user liked by fan",user,fan});
+  
+  } catch (error) {
+    console.log(error)
+    res.status(400).json({error})
+  }
+  
+  }
 exports.maxLiked = async (req,res)=>{
   try {
   
@@ -362,3 +394,531 @@ exports.maxLiked = async (req,res)=>{
     res.status(400).json({error})
   }
 }
+
+
+exports.levelUp = async(req,res)=>{
+ 
+  try{ 
+  const {userid}= req.body
+  const user= await User.findById(userid)
+
+  if (user.coins == 100000){
+    user.level= user.level +1;
+    user.levelName= "pro "
+    user.levelIcon= "icon string"
+    console.log('levelup')
+    return res.status(200).json({message:"level up",user})
+  }else{
+    res.status(400).json({message:'no level up'})
+  } 
+
+  if (user.coins == 200000){
+    user.level= user.level +1;
+    user.levelName= "ultra pro"
+    user.levelIcon= "icon string"
+    console.log('levelup')
+    return res.status(200).json({message:"level up",user})
+  }else{
+    res.status(400).json({message:'no level up'})
+  } 
+
+  if (user.coins == 300000){
+    user.level= user.level +1;
+    user.levelName= "promax "
+    user.levelIcon= "icon string"
+    console.log('levelup')
+    return res.status(200).json({message:"level up",user})
+  }else{
+    res.status(400).json({message:'no level up'})
+  } 
+
+  if (user.coins == 400000){
+    user.level= user.level +1;
+    user.levelName= "tiger"
+    user.levelIcon= "icon string"
+    console.log('levelup')
+    return res.status(200).json({message:"level up",user})
+  }else{
+    res.status(400).json({message:'no level up'})
+  } 
+
+  if (user.coins == 500000){
+    user.level= user.level +1;
+    user.levelName= "giant tiger"
+    user.levelIcon= "icon string"
+    console.log('levelup')
+    return res.status(200).json({message:"level up",user})
+  }else{
+    res.status(400).json({message:'no level up'})
+  } 
+
+  if (user.coins == 600000){
+    user.level= user.level +1;
+    user.levelName= "falcon"
+    user.levelIcon= "icon string"
+    console.log('levelup')
+    return res.status(200).json({message:"level up",user})
+  }else{
+    res.status(400).json({message:'no level up'})
+  } 
+  if (user.coins == 700000){
+    user.level= user.level +1;
+    user.levelName= "eagle"
+    user.levelIcon= "icon string"
+    console.log('levelup')
+    return res.status(200).json({message:"level up",user})
+  }else{
+    res.status(400).json({message:'no level up'})
+  } 
+  if (user.coins == 800000){
+    user.level= user.level +1;
+    user.levelName= "magnificiant"
+    user.levelIcon= "icon string"
+    console.log('levelup')
+    return res.status(200).json({message:"level up",user})
+  }else{
+    res.status(400).json({message:'no level up'})
+  } 
+  if (user.coins == 900000){
+    user.level= user.level +1;
+    user.levelName= "wild lion"
+    user.levelIcon= "icon string"
+    console.log('levelup')
+    return res.status(200).json({message:"level up",user})
+  }else{
+    res.status(400).json({message:'no level up'})
+  } 
+  if (user.coins == 1000000){
+    user.level= user.level +1;
+    user.levelName= "king of kings"
+    user.levelIcon= "icon string"
+    console.log('levelup')
+    return res.status(200).json({message:"level up",user})
+  }else{
+    res.status(400).json({message:'no level up'})
+  } 
+
+
+
+  }catch(error){
+    res.status(404).json(error)
+  }
+}
+
+exports.liveSession = async(req,res)=>{
+
+  try {
+    // Helper function to create a fake bot user
+function createFakeBotUser() {
+  const fakeBotUserId = generateUniqueUserId();
+  const fakeBotUser = {
+    _id: fakeBotUserId,
+    name: "Bot User",
+    isBot: true,
+  };
+
+  return fakeBotUser;
+}
+
+function generateUniqueUserId() {
+  return uuidv4()
+
+}
+    
+   const {userid, liveid} = req.body
+   const user = await User.findById(userid)
+   if(!user)
+    { return res.status(400).send("no such user exists")}
+
+   const live = await User.findById(liveid);
+   if(!live)
+      { return res.status(400).send("no such fan user exists")}
+   
+
+        const already= user.lives.includes(live)
+      if(already){
+        console.log('user already in live seesion')
+      }
+      user.lives.push(live);
+      const fakeBotUsers = [];
+      for (let i = 0; i < 8; i++) {
+        const fakeBotUser = createFakeBotUser();//call to fuc
+        fakeBotUsers.push(fakeBotUser);
+        user.lives.push(fakeBotUser);
+      }
+      await user.save();
+      const numberOfUsers = user.lives.length;
+      res.status(200).json({message:" no of users watching this video", numberOfUsers });
+
+
+
+
+  } catch (error) {
+    
+  }
+}
+// exports.liveSession = async (req, res) => {
+//   try {
+//     const { userid, liveid } = req.body;
+
+//     // Find the real user
+//     const user = await User.findById(userid);
+//     if (!user) {
+//       return res.status(400).send("No such user exists");
+//     }
+
+//     // Find the live video
+//     const live = await User.findById(liveid);
+//     if (!live) {
+//       return res.status(400).send("No such live video exists");
+//     }
+
+//     // Add the real user to the live session
+//     user.lives.push(live);
+
+//     // Create fake bot users
+//     const fakeBotUsers = [];
+//     for (let i = 0; i < 8; i++) {
+//       const fakeBotUser = createFakeBotUser();
+//       fakeBotUsers.push(fakeBotUser);
+//       user.lives.push(fakeBotUser);
+//     }
+
+//     // Save the user with the live session and fake bot users
+//     await user.save();
+
+//     // Return the number of users watching the video (real user + fake bot users)
+//     const numberOfUsers = user.lives.length;
+//     res.status(200).json({ numberOfUsers });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send("Internal Server Error");
+//   }
+// };
+
+// // Helper function to create a fake bot user
+// function createFakeBotUser() {
+//   // Generate a unique ID for the fake bot user
+//   const fakeBotUserId = generateUniqueUserId();
+
+//   // Create a fake bot user object with necessary properties
+//   const fakeBotUser = {
+//     _id: fakeBotUserId,
+//     name: "Bot User",
+//     isBot: true,
+//     // Add any additional properties needed for the fake bot user
+//   };
+
+//   return fakeBotUser;
+// }
+
+// // Helper function to generate a unique ID for the fake bot user
+// function generateUniqueUserId() {
+//   // Logic to generate a unique ID for the fake bot user
+//   // You can use a library like uuid or any other method to generate unique IDs
+// }
+
+exports.luxuryGift=async(req,res)=>{
+     try {
+       const{senderid,recieverid,coins}= req.body
+       const sender = await User.findById(senderid)
+       if(!sender)
+       { return res.status(400).send("no such sender")}
+       const reciever= await User.findById(recieverid)
+       if(!reciever)
+       { return res.status(400).send("no such reciever exists")}
+
+       const actualCoins = 0.9 * coins
+       reciever.coins = reciever.coins + actualCoins;
+
+       sender.coins= sender.coins - coins;
+      return res.status(200).json({message:"gift awarded",sender,reciever})
+     } catch (error) {
+      console.log(error)
+      res.status(400).json(error)
+     }
+
+}
+
+exports.luckyGift=async(req,res)=>{
+  try {
+    const{senderid,recieverid,coins}= req.body
+    const sender = await User.findById(senderid)
+    if(!sender)
+    { return res.status(400).send("no such sender exists")}
+    const reciever= await User.findById(recieverid)
+    if(!reciever)
+    { return res.status(400).send("no such reciever exists")}
+
+    const actualCoins = 0.1 * coins
+    reciever.coins = reciever.coins + actualCoins;
+
+    sender.coins= sender.coins - coins;
+    return res.status(200).json({message:"gift awarded",sender,reciever})
+  } catch (error) {
+   console.log(error)
+   res.status(400).json(error)
+  }
+
+}
+
+
+exports.handleSuperJackpot = async (req, res) => {
+  try {
+    const { userId, coinAmount } = req.body;
+
+    // Validate request body
+    if (!userId || !coinAmount) {
+      return res.status(400).json({ error: 'Invalid request body' });
+    }
+
+    // Find the user in the database using their ID
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if the user fulfills the requirements for the super jackpot
+    // Let's assume the requirements are being a VIP user and having a minimum coin amount
+    const isVIPUser = user.isVIP;
+    const hasMinimumCoins = user.coins >= coinAmount;
+
+    if (!isVIPUser || !hasMinimumCoins) {
+      return res.json({ message: 'You are not eligible for the Super Jackpot!' });
+    }
+
+    // If the user is eligible, calculate the super jackpot prize (let's assume a random number between 1000 and 5000 coins)
+    const superJackpotPrize = Math.floor(Math.random() * (5000 - 1000 + 1) + 1000);
+
+
+    // Award the user with the super jackpot prize
+    user.coins += superJackpotPrize;
+    await user.save();
+
+    // Trigger a notification for the user about winning the Super Jackpot
+    sendNotification(userId, `Congratulations! You won ${superJackpotPrize} coins in the Super Jackpot!`);
+
+    return res.json({ message: `Congratulations! You won ${superJackpotPrize} coins in the Super Jackpot!` });
+  } catch (error) {
+    console.error('Error processing Super Jackpot:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
+exports.handleSingleSend = async (req, res) => {
+  try {
+    const { senderId, coinCollectionProbabilities } = req.body;
+
+    // Validate request body
+    if (!senderId || !coinCollectionProbabilities || !Array.isArray(coinCollectionProbabilities)) {
+      return res.status(400).json({ error: 'Invalid request body' });
+    }
+
+    // Find the sender in the database using their ID
+    const sender = await User.findById(senderId);
+
+    if (!sender) {
+      return res.status(404).json({ error: 'Sender not found' });
+    }
+
+    // Function to calculate the coin collection outcome based on provided probabilities
+    const getCoinCollectionOutcome = () => {
+      const randomNumber = Math.random();
+      let cumulativeProbability = 0;
+
+      for (const { coins, probability } of coinCollectionProbabilities) {
+        cumulativeProbability += probability;
+        if (randomNumber < cumulativeProbability) {
+          return coins;
+        }
+      }
+
+      // If no match was found, return 0 (no coins collected)
+      return 0;
+    };
+
+    // Calculate the coin collection outcome
+    const collectedCoins = getCoinCollectionOutcome();
+
+    // Deduct defined percentage (e.g., 5%) as transaction fee
+    const transactionFeePercentage = 5;
+    const transactionFee = (collectedCoins * transactionFeePercentage) / 100;
+    const collectedCoinsAfterFee = collectedCoins - transactionFee;
+
+    // Save the single send transaction in the database
+    const transaction = {
+      senderId,
+      collectedCoins: collectedCoinsAfterFee,
+      coinCollectionProbabilities,
+      transactionType: 'singleSend',
+      timestamp: new Date(),
+      // Add other relevant data here if needed
+    };
+
+    // Save the transaction to the database
+    sender.transactions.push(transaction);
+    await sender.save();
+
+    return res.json(transaction);
+  } catch (error) {
+    console.error('Error processing single send:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
+exports.handleComboSend = async (req, res) => {
+  try {
+    const { senderId, coinCollectionProbabilities } = req.body;
+
+    // Validate request body
+    if (!senderId || !coinCollectionProbabilities || !Array.isArray(coinCollectionProbabilities)) {
+      return res.status(400).json({ error: 'Invalid request body' });
+    }
+
+    // Find the sender in the database using their ID
+    const sender = await User.findById(senderId);
+
+    if (!sender) {
+      return res.status(404).json({ error: 'Sender not found' });
+    }
+
+    // Function to calculate the coin collection outcome based on provided probabilities
+    const getCoinCollectionOutcome = () => {
+      const randomNumber = Math.random();
+      let cumulativeProbability = 0;
+
+      for (const { coins, probability } of coinCollectionProbabilities) {
+        cumulativeProbability += probability;
+        if (randomNumber < cumulativeProbability) {
+          return coins;
+        }
+      }
+
+      // If no match was found, return 0 (no coins collected)
+      return 0;
+    };
+
+    // Calculate the coin collection outcome
+    const collectedCoins = getCoinCollectionOutcome();
+
+    // Deduct defined percentage (e.g., 5%) as transaction fee
+    const transactionFeePercentage = 5;
+    const transactionFee = (collectedCoins * transactionFeePercentage) / 100;
+    const collectedCoinsAfterFee = collectedCoins - transactionFee;
+
+    // Save the combo send transaction in the database
+    const transaction = {
+      senderId,
+      collectedCoins: collectedCoinsAfterFee,
+      coinCollectionProbabilities,
+      transactionType: 'comboSend',
+      timestamp: new Date(),
+      // Add other relevant data here if needed
+    };
+
+    // Save the transaction to the database
+    sender.transactions.push(transaction);
+    await sender.save();
+
+    return res.json(transaction);
+  } catch (error) {
+    console.error('Error processing combo send:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.fruitCoinGame = async (req, res) => {
+  try {
+    const { userid, betCoins } = req.body;
+    const user = await User.findById(userid);
+    if (!user) {
+      return res.status(400).send('No user found');
+    }
+
+    // Check if the user is blocked and the block has not expired
+    if (user.blockExpiresAt && user.blockExpiresAt > new Date()) {
+      const remainingTime = (user.blockExpiresAt - new Date()) / (1000 * 60 * 60);
+      return res.status(403).json({ error: `You are blocked. Try again after ${remainingTime.toFixed(2)} hours` });
+    }
+
+    // Check if the user has more than 5 million coins today
+    const currentTime = new Date();
+    const today = new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate());
+    const todayTransactions = user.transactions.filter((t) => t.timestamp >= today);
+    const totalCoinsWonToday = todayTransactions.reduce((total, t) => total + t.collectedCoins, 0);
+
+    if (totalCoinsWonToday >= 5000000) {
+      return res.status(403).json({ error: 'You have reached the daily coin win limit' });
+    }
+    const coinString = betCoins.toString();
+    let  coins   =parseInt(coinString.replace("k",""))
+    console.log(coins)
+    coins*= 1000;
+    console.log("coins are",coins)
+    if (user.coins < coins) {
+      return res.status(400).send('You don\'t have enough coins');
+    }
+
+    const cards = ['apple', 'grapes', 'orange'];
+    const card = _.sample(cards);
+
+    let rewardedCoins = 0;
+    if (card === 'apple' || card === 'orange') {
+      
+      const  rewardedCoins = coins * 2
+      console.log('reward',rewardedCoins)
+      user.coins += rewardedCoins;
+      console.log("user coins now",user.coins)
+      await user.save();
+     
+    } else {
+     
+      const  rewardedCoins = coins * 7
+      console.log('reward',rewardedCoins)
+      user.coins += rewardedCoins;
+      console.log("user coins now",user.coins)
+      await user.save();
+    }
+
+ 
+   
+
+    // Update the user's game history
+    const transaction = {
+      collectedCoins: rewardedCoins ,
+      betCoins,
+      card,
+      timestamp: new Date(),
+    };
+    user.transactions.push(transaction);
+    await user.save();
+    console.log('reward after save',rewardedCoins)
+    res.status(200).json({
+      message: `Congratulations! You earned ${card} card. Reward: ${rewardedCoins} coins`,
+      card,
+      rewardedCoins,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.getUserGameHistory = async (req, res) => {
+  try {
+    const { userid } = req.params;
+    const user = await User.findById(userid);
+    if (!user) {
+      return res.status(400).send('No user found');
+    }
+
+    res.status(200).json(user.transactions);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
