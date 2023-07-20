@@ -857,7 +857,6 @@ exports.fruitCoinGame = async (req, res) => {
     let  coins   =parseInt(coinString.replace("k",""))
     console.log(coins)
     coins*= 1000;
-    console.log("coins are",coins)
     if (user.coins < coins) {
       return res.status(400).send('You don\'t have enough coins');
     }
@@ -868,18 +867,17 @@ exports.fruitCoinGame = async (req, res) => {
     let rewardedCoins = 0;
     if (card === 'apple' || card === 'orange') {
       
-      const  rewardedCoins = coins * 2
+       rewardedCoins = coins * 2
       console.log('reward',rewardedCoins)
       user.coins += rewardedCoins;
-      console.log("user coins now",user.coins)
       await user.save();
      
     } else {
      
-      const  rewardedCoins = coins * 7
+      rewardedCoins = coins * 7
       console.log('reward',rewardedCoins)
       user.coins += rewardedCoins;
-      console.log("user coins now",user.coins)
+    
       await user.save();
     }
 
