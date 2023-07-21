@@ -14,7 +14,7 @@ const _ = require('underscore');
 
 exports.Signup = async (req,res)=>{
 
-    const {name,email,password,phoneNo,profilePic,coverPhoto,gender,country,relationship,coins}=req.body;
+    const {name,email,password,phoneNo,profilePic,coverPhoto,gender,country,relationship,isVIP,coins}=req.body;
     try{
       
        if(!email || !password ){
@@ -46,7 +46,7 @@ exports.Signup = async (req,res)=>{
 
 
             const hashed =await bcrypt.hash(password,10);
-            const user =new User({name,email,password:hashed,phoneNo,profilePic,coverPhoto,gender,country,relationship,coins});
+            const user =new User({name,email,password:hashed,phoneNo,profilePic,coverPhoto,gender,country,relationship,coins,isVIP});
             await user.save();
             console.log('user registered')
           return  res.status(200).json({message:'User Signup in process.verify otp'});
@@ -683,6 +683,7 @@ exports.handleSuperJackpot = async (req, res) => {
     // Let's assume the requirements are being a VIP user and having a minimum coin amount
     const isVIPUser = user.isVIP;
     const hasMinimumCoins = user.coins >= coinAmount;
+    console.log(hasMinimumCoins)
 
     if (!isVIPUser || !hasMinimumCoins) {
       return res.json({ message: 'You are not eligible for the Super Jackpot!' });
@@ -831,6 +832,8 @@ exports.handleComboSend = async (req, res) => {
 };
 
 exports.fruitCoinGame = async (req, res) => {
+  
+  let gameStartTime = null;
   try {
     const { userid, betCoins } = req.body;
     const user = await User.findById(userid);
@@ -843,12 +846,31 @@ exports.fruitCoinGame = async (req, res) => {
       const remainingTime = (user.blockExpiresAt - new Date()) / (1000 * 60 * 60);
       return res.status(403).json({ error: `You are blocked. Try again after ${remainingTime.toFixed(2)} hours` });
     }
-
-    // Check if the user has more than 5 million coins today
+    
+     // Check if the game session has started (first request)
+     if (!gameStartTime) {
+      // If the game session has not started, set the gameStartTime to the current time
+      gameStartTime = new Date();
+    }
+  //  console.log('startTime',gameStartTime)
+    // Calculate the elapsed time since the game session started (in seconds)
     const currentTime = new Date();
+    const elapsedTimeSeconds = Math.floor((currentTime - gameStartTime) / 1000);
+    // console.log("time in seconds",elapsedTimeSeconds)
+
+    // Check if the elapsed time is within the 25-second limit
+    if (elapsedTimeSeconds >= 25) {
+      return res.status(403).json({ error: 'Betting is not allowed after 25 seconds' });
+    }
+    // Check if the user has more than 5 million coins today
+    // console.log('current time',currentTime)
+    console.log(currentTime.getFullYear(),currentTime.getMonth(),currentTime.getDate())
     const today = new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate());
+    // console.log(today)
     const todayTransactions = user.transactions.filter((t) => t.timestamp >= today);
+    // console.log(todayTransactions)
     const totalCoinsWonToday = todayTransactions.reduce((total, t) => total + t.collectedCoins, 0);
+    // console.log(totalCoinsWonToday)
 
     if (totalCoinsWonToday >= 5000000) {
       return res.status(403).json({ error: 'You have reached the daily coin win limit' });
@@ -882,7 +904,6 @@ exports.fruitCoinGame = async (req, res) => {
     }
 
  
-   
 
     // Update the user's game history
     const transaction = {
@@ -919,4 +940,106 @@ exports.getUserGameHistory = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+exports.teenPatti = async(req,res)=>{
+  let gameStartTime = null
+  try {
+    const { userid1,userid2,userid3, betCoins } = req.body;
+    const user1 = await User.findById(userid1);
+    if (!user1) {
+      return res.status(400).send('No user found');
+    }
+    const user2 = await User.findById(userid2);
+    if (!user2) {
+      return res.status(400).send('No user found');
+    }
+    const user3 = await User.findById(userid3);
+    if (!user3) {
+      return res.status(400).send('No user found');
+    }
+    const coinString = betCoins.toString();
+    let  coins   =parseInt(coinString.replace("k",""))
+    console.log(coins)
+    coins*= 1000;
+    if (user1.coins < coins) {
+      return res.status(400).send('You don\'t have enough coins');
+    }
+    if (user2.coins < coins) {
+      return res.status(400).send('You don\'t have enough coins');
+    }
+    if (user3.coins < coins) {
+      return res.status(400).send('You don\'t have enough coins');
+    }
+
+    
+    if(!gameStartTime){
+       gameStartTime=new Date();
+    }
+    const currentTime = new Date();
+    const elapsedTimeSeconds= Math.floor((currentTime-gameStartTime)/1000)
+
+    if(elapsedTimeSeconds >= 20){
+      return res.status(401).json({ message:"Only 5 seconds are left for betting coins" });
+    }
+    
+    const cards = [{card1:"A red ♥",card2:"A black ☘",card3:"A black🍀",card4:"A red 🎲",power:6},
+    {card1:"A red 🎲",card2:"K red 🎲",card3:"Q red 🎲",power:5},
+    {card1:"A black ☘",card2:"K red ♥",card3:"Q red 🎲",power:4},
+    {card1:"A red 🎲",card2:"K red 🎲",card3:"J red 🎲",power:3},
+    {card1:"A black🍀",card2:"A red 🎲",card3:"K black ☘",power:2},
+    {card1:"A  black ☘",card2:"K black ☘ ",card3:"J black🍀",power:1}]
+
+    const first = _.sample(cards)
+    const second= _.sample(cards)
+    const third= _.sample(cards)
+    const competingCards = [first,second,third]
+
+    //  const competingCards = [_.sample(cards),_.sample(cards),_.sample(cards)]
+   
+    // console.log("compieting cards are",competingCards)
+    if(elapsedTimeSeconds >= 27){
+     return res.status(401).json({ message:"Cards compieting for win are ",competingCards});
+   }
+    let winUserId=""
+     let winner=0
+     let winIndex=0
+     let winnerCard={}
+    competingCards.map((card)=>{
+        if(winner < card.power)
+        {  winner=card.power
+          winnerCard= card
+          winIndex= competingCards.indexOf(card)
+          }
+     })
+     console.log("index user",winIndex)
+     if(winIndex == 0){
+      winUserId=user1._id
+      user1.coins*=2.9
+      await user1.save()
+     }
+     else if(winIndex == 1){
+      winUserId=user2._id
+      user2.coins*=2.9
+      await user2.save()
+     }
+     else{
+      winUserId=user3._id
+      user3.coins*=2.9
+      await user3.save()
+     }
+    const winnerUser = await User.findById(winUserId)
+
+     console.log( "winner power",winner)
+     console.log( "winner card",winnerCard)
+
+     if(elapsedTimeSeconds >= 29){
+      return res.status(200).json({ message:`Compeiting cards and the winner card with max power is `,competingCards,winnerCard,winnerUser});
+    }
+     res.status(200).json({message:`Compeiting cards and the winner card User with max power is `,competingCards,winnerCard,winnerUser})
+
+  } catch (error) {
+    console.log(error)
+    res.status(400).json({error})
+  }
+}
 
