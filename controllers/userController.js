@@ -269,73 +269,7 @@ exports.deleteuser = async(req,res)=>{
     }
  
  }
-// exports.likeUser = async(req,res)=>{
-// try {
-//      const{userId,fanId}= req.body;
-//       const user = await User.findById(userId)
-//       if(!user) 
-//        { return res.status(400).send("no such user exists")}
-//       const fan = await User.findById(fanId);
-//       if(!fan)
-//          { return res.status(400).send("no such fan user exists")}
-//       console.log('user is',user)
-//       console.log('fan user is',fan)
-//        console.log('checking if user already liked')
-//     //  console.log('user likes are',user.likes)
-//       if(user.likes.includes(fan)){
-//         return res.status(400).json({message:"User already liked by fan"})
-//       }
 
-      
-//       await user.likes.unshift(fan);
-//       await user.save();
-//       return res.status(200).json({message:"user liked by fan",user,fan});
-
-// } catch (error) {
-//   console.log(error)
-//   res.status(400).json({error})
-// }
-
-// }
-
-// exports.likeUser = async (req, res) => {
-//   try {
-//     const { userid, fanid } = req.body;
-
-//     // Find the user by ID
-//     const user = await User.findById(userid);
-
-//     if (!user) {
-//       return res.status(404).json({ message: "No such user exists" });
-//     }
-
-//     // Find the fan user by ID
-//     const fan = await User.findById(fanid);
-
-//     if (!fan) {
-//       return res.status(404).json({ message: "No such fan user exists" });
-//     }
-
-//     console.log("Checking if user is already liked by the fan");
-//     console.log(user);
-
-//     // Check if the fan is already in the user's likes array
-//     if (user.likes.includes(fan._id)) {
-//       return res.status(400).json({ message: "User already liked by fan" });
-//     }
-
-//     // Add the fan ID to the user's likes array
-//     user.likes.push(fan._id);
-//     await user.save();
-
-//     return res
-//       .status(200)
-//       .json({ message: "User liked by fan", user: user, fan: fan });
-//   } catch (error) {
-//     console.error("Error occurred while liking user:", error);
-//     return res.status(500).json({ message: "Internal server error" });
-//   }
-// };
 exports.likeUser = async(req,res)=>{
   try {
       const {userId} = req.params
@@ -365,6 +299,7 @@ exports.likeUser = async(req,res)=>{
   }
   
   }
+
 exports.maxLiked = async (req,res)=>{
   try {
   
@@ -942,100 +877,192 @@ exports.getUserGameHistory = async (req, res) => {
 };
 
 exports.teenPatti = async(req,res)=>{
-  let gameStartTime = null
+  const SECONDS_FOR_BETTING = 25;
+  const SECONDS_FOR_CARD_SHOW = 3;
+  const SECONDS_FOR_USER_SHOW = 2;
+  
+  let gameStartTime = null;
+  
+  // Function to wait for the specified number of seconds
+  function wait(seconds) {
+    return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+  }
   try {
-    const { userid1,userid2,userid3, betCoins } = req.body;
-    const user1 = await User.findById(userid1);
-    if (!user1) {
-      return res.status(400).send('No user found');
-    }
-    const user2 = await User.findById(userid2);
-    if (!user2) {
-      return res.status(400).send('No user found');
-    }
-    const user3 = await User.findById(userid3);
-    if (!user3) {
-      return res.status(400).send('No user found');
-    }
-    const coinString = betCoins.toString();
-    let  coins   =parseInt(coinString.replace("k",""))
-    console.log(coins)
-    coins*= 1000;
-    if (user1.coins < coins) {
-      return res.status(400).send('You don\'t have enough coins');
-    }
-    if (user2.coins < coins) {
-      return res.status(400).send('You don\'t have enough coins');
-    }
-    if (user3.coins < coins) {
-      return res.status(400).send('You don\'t have enough coins');
+    const { users, betCoins } = req.body;
+    for(const user of users){
+        const isExists =    await User.findById(user.userid)
+        if (!isExists) {
+          return res.status(400).json({message:` A user  do not exist`});
+        }
     }
 
+    const coinString = betCoins.toString();
+    let  betcoins  =parseInt(coinString.replace("k",""))
+    console.log(betcoins)
+    betcoins*= 1000;
+    for( const user of users){
+      if(user.coins < betcoins){
+        return res.status(400).send('You don\'t have enough coins');
+      }
+    }
     
     if(!gameStartTime){
        gameStartTime=new Date();
     }
-    const currentTime = new Date();
-    const elapsedTimeSeconds= Math.floor((currentTime-gameStartTime)/1000)
-
-    if(elapsedTimeSeconds >= 20){
-      return res.status(401).json({ message:"Only 5 seconds are left for betting coins" });
-    }
     
+    let currentTime = new Date();
+    let elapsedTimeSeconds = Math.floor((currentTime - gameStartTime) / 1000);
+    if (elapsedTimeSeconds >= SECONDS_FOR_BETTING) {
+      return res.status(401).json({ message: "Betting time is over" });
+    }
+    await wait(SECONDS_FOR_BETTING - elapsedTimeSeconds);//first call to promise
     const cards = [{card1:"A red ♥",card2:"A black ☘",card3:"A black🍀",card4:"A red 🎲",power:6},
     {card1:"A red 🎲",card2:"K red 🎲",card3:"Q red 🎲",power:5},
     {card1:"A black ☘",card2:"K red ♥",card3:"Q red 🎲",power:4},
     {card1:"A red 🎲",card2:"K red 🎲",card3:"J red 🎲",power:3},
     {card1:"A black🍀",card2:"A red 🎲",card3:"K black ☘",power:2},
     {card1:"A  black ☘",card2:"K black ☘ ",card3:"J black🍀",power:1}]
+    function excludeFirst() {
+      for (let i = 0; i < cards.length; i++) {
+          if (cards[i] === firstBox ){
+              let spliced = cards.splice(i, 1);
+              console.log("Removed element: " + spliced);
+            
+          }
+          } }
+    function excludeSecond() {
+            for (let i = 0; i < cards.length; i++) {
+                if (cards[i] === secondBox ){
+                    let spliced = cards.splice(i, 1);
+                    console.log("Removed element: " + spliced);
+                  
+                }
+                } }
 
-    const first = _.sample(cards)
-    const second= _.sample(cards)
-    const third= _.sample(cards)
-    const competingCards = [first,second,third]
+    const firstBox = _.sample(cards)
+    excludeFirst()
+    const secondBox= _.sample(cards)
+    excludeSecond()
+    const thirdBox= _.sample(cards)
 
-    //  const competingCards = [_.sample(cards),_.sample(cards),_.sample(cards)]
-   
-    // console.log("compieting cards are",competingCards)
-    if(elapsedTimeSeconds >= 27){
-     return res.status(401).json({ message:"Cards compieting for win are ",competingCards});
-   }
-    let winUserId=""
+    const competingCards = [firstBox,secondBox,thirdBox]
+    
+     console.log("compieting cards are",competingCards)
+ 
+     const currentTimeAfterBetting = new Date();
+     const elapsedTimeSecondsAfterBetting = Math.floor((currentTimeAfterBetting - gameStartTime) / 1000);
+     if (elapsedTimeSecondsAfterBetting >= SECONDS_FOR_BETTING + SECONDS_FOR_CARD_SHOW) {
+       return res.status(401).json({ message: "Card show time is over" });
+      }
+      // Perform the card show phase (waiting for the remaining card show time)//sec0nd call to wait
+      await wait(SECONDS_FOR_CARD_SHOW);
+      
+  
      let winner=0
      let winIndex=0
-     let winnerCard={}
+     let winnerBox={}
     competingCards.map((card)=>{
         if(winner < card.power)
         {  winner=card.power
-          winnerCard= card
+          winnerBox= card
           winIndex= competingCards.indexOf(card)
           }
      })
-     console.log("index user",winIndex)
+    //  console.log("win box index",winIndex)//done
+let winUsers= []
+let winBoxNumber=''
+let userBeforeCoins=0
+let rewardedCoins=0
+
      if(winIndex == 0){
-      winUserId=user1._id
-      user1.coins*=2.9
-      await user1.save()
-     }
+      //first box users are winners retrive users who chose first card
+ 
+       for(let user of users){
+            if(user.boxNo === "first"){
+            let winuser = await User.findById(user.userid)
+            winBoxNumber="first box is winner"
+            winUsers.push(winuser)
+            userBeforeCoins = winuser.coins
+            winuser.coins*=2.9 
+            rewardedCoins= winuser.coins - userBeforeCoins
+            winuser.teenPattiTrans.push({seatName:"SeatA",collectedCoins:rewardedCoins})
+
+             await winuser.save()
+            }
+          }
+          for(let user of users){
+            if(user.boxNo != "first"){
+            let lostuser = await User.findById(user.userid)
+             lostuser.coins-= betcoins
+             await lostuser.save()
+            }
+          }
+
+    }
      else if(winIndex == 1){
-      winUserId=user2._id
-      user2.coins*=2.9
-      await user2.save()
+      //second box users are winners
+      for(let user of users){
+        if(user.boxNo === "second"){
+          winBoxNumber="second box is winner"
+        let winuser = await User.findById(user.userid)
+        winUsers.push(winuser)
+        userBeforeCoins = winuser.coins
+        winuser.coins*=2.9
+        rewardedCoins= winuser.coins - userBeforeCoins
+        console.log('rewarded coins', rewardedCoins)
+        winuser.teenPattiTrans.push({seatName:"SeatB",collectedCoins:rewardedCoins})
+         await winuser.save()
+        }
+      }
+      for(let user of users){
+        if(user.boxNo != "second"){
+        let lostuser = await User.findById(user.userid)
+         lostuser.coins-=betcoins
+         await lostuser.save()
+        }
+      }
      }
      else{
-      winUserId=user3._id
-      user3.coins*=2.9
-      await user3.save()
+      //third box users are winner
+      for(let user of users){
+        if(user.boxNo === "third"){
+          winBoxNumber=" third box is winner"
+        let winuser = await User.findById(user.userid)
+        winUsers.push(winuser)
+        userBeforeCoins = winuser.coins
+        winuser.coins*=2.9
+        rewardedCoins= winuser.coins - userBeforeCoins
+        console.log('rewarded coins', rewardedCoins)
+        winuser.teenPattiTrans.push({seatName:"SeatC",collectedCoins:rewardedCoins})
+         await winuser.save()
+        }
+      }
+      for(let user of users){
+        if(user.boxNo != "third"){
+        let lostuser = await User.findById(user.userid)
+         lostuser.coins-=betcoins
+         await lostuser.save() 
+        }
+      }
+    
      }
-    const winnerUser = await User.findById(winUserId)
+  
 
      console.log( "winner power",winner)
-     console.log( "winner card",winnerCard)
+     console.log( "winner box",winnerBox)
 
-     if(elapsedTimeSeconds >= 29){
-      return res.status(200).json({ message:`Compeiting cards and the winner card with max power is `,competingCards,winnerCard,winnerUser});
-    }
-     res.status(200).json({message:`Compeiting cards and the winner card User with max power is `,competingCards,winnerCard,winnerUser})
+     // Check if the game is in the user show phase (within the last 2 seconds)
+     const currentTimeAfterCardShow = new Date();
+     const elapsedTimeSecondsAfterCardShow = Math.floor((currentTimeAfterCardShow - gameStartTime) / 1000);
+     if (elapsedTimeSecondsAfterCardShow >= SECONDS_FOR_BETTING + SECONDS_FOR_CARD_SHOW + SECONDS_FOR_USER_SHOW) {
+       return res.status(200).json({ message: "User show time is over" });
+       //  Perform the user show phase (waiting for the remaining user show time)
+          await wait(SECONDS_FOR_USER_SHOW);
+ }
+
+
+
+   res.status(200).json({message:`Compeiting cards and the winner card User with max power is `,competingCards,winnerBox,winBoxNumber,winUsers})
 
   } catch (error) {
     console.log(error)
@@ -1043,3 +1070,89 @@ exports.teenPatti = async(req,res)=>{
   }
 }
 
+exports.coinsCollectedThroughFruitGame= async(req,res)=>{
+  try {
+     const {userid}= req.body
+     const user = await User.findById(userid)
+     if(!user){
+      return res.status(400).json({message:"no such user exists in our database"})
+     }
+  
+    
+     let appleCoinsSum=0
+     let grapesCoinSum=0
+     let orangeCoinsSum=0
+  
+         user.transactions.map((trans)=>{
+  
+          //if user has played fruit game and has its transcation
+          if('card' in trans){
+          // console.log('user has card property in transcations.he has played game before')
+          if(trans.card === 'apple'){
+            appleCoinsSum+=trans.collectedCoins
+          } 
+          else if(trans.card === 'grapes'){
+            grapesCoinSum+= trans.collectedCoins
+          }
+          else{
+             orangeCoinsSum+=trans.collectedCoins
+          }
+  
+          } 
+          //comes here if this transcation is not of fruit game
+          
+         })
+  
+         res.status(200).json({message:"User history for coins collection in fruit game is",appleCoinsSum,orangeCoinsSum,grapesCoinSum})
+  
+  
+  } catch (error) {
+    console.log(error)
+    res.status(400).json({error})
+    
+  }
+  
+  }
+
+
+  exports.wonAtSeats = async(req,res)=>{
+   
+    try{
+    let Acount=0
+    let coinsWonAtSeatA=0
+    let Bcount = 0
+    let coinsWonAtSeatB=0
+    let Ccount=0
+    let coinsWonAtSeatC=0
+
+    const users = await User.find({})
+     
+     users.map((user)=>{
+         //calculates all seat for one user step by step
+       user.teenPattiTrans.map((trans)=>{
+        // console.log('transc detail',trans)
+          if(trans.seatName === "SeatA"){
+            Acount+=1
+            coinsWonAtSeatA+=trans.collectedCoins
+          }
+         if(trans.seatName === "SeatB"){
+            Bcount+=1 
+            coinsWonAtSeatB+=trans.collectedCoins
+          }
+          if(trans.seatName === "SeatC"){
+            Ccount+=1
+            coinsWonAtSeatC+=trans.collectedCoins
+          }
+          
+       })
+
+
+     })
+
+     res.status(200).json({message:"Users won with total coins collected by seat A,B,C respectively are",Acount,coinsWonAtSeatA,Bcount,coinsWonAtSeatB,Ccount,coinsWonAtSeatC})
+    }catch(error){
+      console.log(error)
+      res.status(400).json(error)
+    }
+
+  }

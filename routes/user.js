@@ -3,7 +3,8 @@ const router = express.Router()
 const passport= require('passport')
 const{Signup,login,verifyOtp,loginWithGoogle,loginWithFacebook,
   loginWithTwitter,getUser,updateuser,deleteuser,maxLiked,likeUser,levelUp,liveSession,luxuryGift,
-  luckyGift,handleSuperJackpot,handleSingleSend,handleComboSend,fruitCoinGame,teenPatti}= require('../controllers/userController')
+  luckyGift,handleSuperJackpot,handleSingleSend,handleComboSend,fruitCoinGame,getUserGameHistory,teenPatti,
+  coinsCollectedThroughFruitGame,wonAtSeats}= require('../controllers/userController')
 
 router.post('/signup',Signup)
 router.post('/verifyOpt',verifyOtp)
@@ -52,6 +53,9 @@ router.post('/superjackpot',handleSuperJackpot)
 router.post('/singleSend',handleSingleSend)
 router.post('/comboSend',handleComboSend)
 router.post('/fruitCoinGame',fruitCoinGame)
+router.post('/getUserGameHistory',getUserGameHistory)
 router.post('/teenpatti',teenPatti)
+router.post('/userFruitGameCoins',coinsCollectedThroughFruitGame)
+router.get('/usersWonBySeat3Patti',wonAtSeats)
 
 module.exports= router

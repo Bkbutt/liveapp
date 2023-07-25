@@ -162,6 +162,8 @@ app.get('/auth/facebook/callback', passport.authenticate('facebook', {
 
 const user= require('./routes/user')
 app.use('/',user)
+const vip= require('./routes/vip')
+app.use('/',vip)
 
 
 app.listen(port, (err) => {
