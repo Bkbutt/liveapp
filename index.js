@@ -164,7 +164,8 @@ const user= require('./routes/user')
 app.use('/',user)
 const vip= require('./routes/vip')
 app.use('/',vip)
-
+const game = require('./routes/games')
+app.use('/',game)
 
 app.listen(port, (err) => {
     if (err) console.log(err);

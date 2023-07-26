@@ -23,6 +23,7 @@
     "passport-twitter": "^1.0.4",
     "twilio": "^4.14.0",
     "underscore": "^1.13.6",
+    "util": "^0.12.5",
     "uuid": "^9.0.0"
   }
 }

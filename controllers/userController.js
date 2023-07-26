@@ -5,7 +5,7 @@ const crypto = require('crypto')
 const twilio= require('twilio')
 const bcrypt= require('bcrypt')
 const jwt = require('jsonwebtoken')
-const { v4: uuidv4 } = require('uuid')//mujha karan dou
+const { v4: uuidv4 } = require('uuid')
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
 const { sendNotification } = require('../notifications/notificationService');
@@ -14,7 +14,7 @@ const _ = require('underscore');
 
 exports.Signup = async (req,res)=>{
 
-    const {name,email,password,phoneNo,profilePic,coverPhoto,gender,country,relationship,isVIP,coins}=req.body;
+    const {name,email,password,phoneNo,profilePic,coverPhoto,gender,country,relationship,isVIP,coins,isBan}=req.body;
     try{
       
        if(!email || !password ){
@@ -46,7 +46,7 @@ exports.Signup = async (req,res)=>{
 
 
             const hashed =await bcrypt.hash(password,10);
-            const user =new User({name,email,password:hashed,phoneNo,profilePic,coverPhoto,gender,country,relationship,coins,isVIP});
+            const user =new User({name,email,password:hashed,phoneNo,profilePic,coverPhoto,gender,country,relationship,coins,isVIP,isBan});
             await user.save();
             console.log('user registered')
           return  res.status(200).json({message:'User Signup in process.verify otp'});
@@ -460,7 +460,7 @@ function generateUniqueUserId() {
 
 }
     
-   const {userid, liveid} = req.body
+   const {userid, liveid} = req.body//user hosting live,liveuser entering live session
    const user = await User.findById(userid)
    if(!user)
     { return res.status(400).send("no such user exists")}
@@ -474,6 +474,9 @@ function generateUniqueUserId() {
       if(already){
         console.log('user already in live seesion')
       }
+      live.isBan = "false"
+      live.isMute ="false"
+      await live.save()
       user.lives.push(live);
       const fakeBotUsers = [];
       for (let i = 0; i < 8; i++) {
@@ -492,66 +495,6 @@ function generateUniqueUserId() {
     
   }
 }
-// exports.liveSession = async (req, res) => {
-//   try {
-//     const { userid, liveid } = req.body;
-
-//     // Find the real user
-//     const user = await User.findById(userid);
-//     if (!user) {
-//       return res.status(400).send("No such user exists");
-//     }
-
-//     // Find the live video
-//     const live = await User.findById(liveid);
-//     if (!live) {
-//       return res.status(400).send("No such live video exists");
-//     }
-
-//     // Add the real user to the live session
-//     user.lives.push(live);
-
-//     // Create fake bot users
-//     const fakeBotUsers = [];
-//     for (let i = 0; i < 8; i++) {
-//       const fakeBotUser = createFakeBotUser();
-//       fakeBotUsers.push(fakeBotUser);
-//       user.lives.push(fakeBotUser);
-//     }
-
-//     // Save the user with the live session and fake bot users
-//     await user.save();
-
-//     // Return the number of users watching the video (real user + fake bot users)
-//     const numberOfUsers = user.lives.length;
-//     res.status(200).json({ numberOfUsers });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).send("Internal Server Error");
-//   }
-// };
-
-// // Helper function to create a fake bot user
-// function createFakeBotUser() {
-//   // Generate a unique ID for the fake bot user
-//   const fakeBotUserId = generateUniqueUserId();
-
-//   // Create a fake bot user object with necessary properties
-//   const fakeBotUser = {
-//     _id: fakeBotUserId,
-//     name: "Bot User",
-//     isBot: true,
-//     // Add any additional properties needed for the fake bot user
-//   };
-
-//   return fakeBotUser;
-// }
-
-// // Helper function to generate a unique ID for the fake bot user
-// function generateUniqueUserId() {
-//   // Logic to generate a unique ID for the fake bot user
-//   // You can use a library like uuid or any other method to generate unique IDs
-// }
 
 exports.luxuryGift=async(req,res)=>{
      try {
@@ -916,9 +859,34 @@ exports.teenPatti = async(req,res)=>{
       return res.status(401).json({ message: "Betting time is over" });
     }
     await wait(SECONDS_FOR_BETTING - elapsedTimeSeconds);//first call to promise
-    const cards = [{card1:"A red ♥",card2:"A black ☘",card3:"A black🍀",card4:"A red 🎲",power:6},
+    const cards = [
+      //sequence 1 cards
+    {card1:"A red ♥",card2:"A black ☘",card3:"A black🍀",power:6},
+    {card1:"K red ♥",card2:"K black ☘",card3:"K black🍀",power:6},
+    {card1:"Q red ♥",card2:"Q black ☘",card3:"Q black🍀",power:6},
+    {card1:"J red ♥",card2:"J black ☘",card3:"J black🍀",power:6},
+    {card1:"10 red ♥",card2:"10 black ☘",card3:"10 black🍀",power:6},
+    {card1:"9 red ♥",card2:"9 black ☘",card3:"9 black🍀",power:6},
+    {card1:"8 red ♥",card2:"8 black ☘",card3:"8 black🍀",power:6},
+    {card1:"7 red ♥",card2:"7 black ☘",card3:"7 black🍀",power:6},
+    {card1:"6 red ♥",card2:"6 black ☘",card3:"6 black🍀",power:6},
+    {card1:"5 red ♥",card2:"5 black ☘",card3:"5 black🍀",power:6},
+    {card1:"4 red ♥",card2:"4 black ☘",card3:"4 black🍀",power:6},
+    //sequence 2 cards
     {card1:"A red 🎲",card2:"K red 🎲",card3:"Q red 🎲",power:5},
-    {card1:"A black ☘",card2:"K red ♥",card3:"Q red 🎲",power:4},
+    {card1:"A red 🎲",card2:"10 red 🎲",card3:"9 red 🎲",power:5},
+    {card1:"K red 🎲",card2:"Q red 🎲",card3:"J red 🎲",power:5},
+    {card1:"A red 🎲",card2:"9 red 🎲",card3:"8 red 🎲",power:5},
+    {card1:"Q red 🎲",card2:"J red 🎲",card3:"10 red 🎲",power:5},
+    {card1:"A red 🎲",card2:"8 red 🎲",card3:"7 red 🎲",power:5},
+    {card1:"10 red 🎲",card2:"9 red 🎲",card3:"8 red 🎲",power:5},
+    {card1:"A red 🎲",card2:"7 red 🎲",card3:"8 red 🎲",power:5},
+    {card1:"8 red 🎲",card2:"7 red 🎲",card3:"6 red 🎲",power:5},
+    {card1:"A red 🎲",card2:"2 red 🎲",card3:"3 red 🎲",power:5},
+    {card1:"6 red 🎲",card2:"5 red 🎲",card3:"4 red 🎲",power:5},
+    {card1:"4 red 🎲",card2:"3 red 🎲",card3:"2 red 🎲",power:5},
+
+    {card1:"2 black ☘",card2:"2 red ♥",card3:"2 red 🎲",power:4},
     {card1:"A red 🎲",card2:"K red 🎲",card3:"J red 🎲",power:3},
     {card1:"A black🍀",card2:"A red 🎲",card3:"K black ☘",power:2},
     {card1:"A  black ☘",card2:"K black ☘ ",card3:"J black🍀",power:1}]

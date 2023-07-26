@@ -25,6 +25,8 @@ twitterPass:{type:String},
 profilePic:{type:String},
 coverPhoto:{type:String},
 userLevel:{type:String},
+isBan:{type:Boolean,default:false},
+isMute:{type:Boolean,default:false},
 isVIP:{type:Boolean},
 likes:{type:Array},
 lives:{type:Array}

@@ -39,14 +39,20 @@ try {
     if(!user){
         return res.status(400).json({message:"no such user exists in single club"})
     }
-if(!user.isVIP === "true"){
-//user not vip
- res.status(200).json({message:"user is banned successfully as is not vip"})
-}
-// executes if user is vip
-console.log('user is  vip')
-res.status(200).json({message:"Vip user cannot be banned"})
+    const VIP = user.isVIP; // Assuming user.isVIP is a boolean (true/false)
 
+    console.log(VIP);
+    
+    if (!VIP) {
+      // User is not VIP
+      user.isBan = true; // Assuming user.isBan is a boolean field as well
+      await user.save();
+      return res.status(200).json({ message: "User is banned successfully as is not VIP" });
+    } else {
+      // User is VIP
+      console.log('User is VIP');
+      return res.status(200).json({ message: "VIP user cannot be banned" });
+    }
 } catch (error) {
     res.status(400).json(error)
 }
@@ -91,4 +97,32 @@ exports.vipIdentityChange= async(req,res)=>{
         res.status(400).json(error)
     }
     
+}
+
+
+exports.muteUser = async (req,res)=>{
+    try {
+        //muting can happen only during live video session
+    const{userid}=req.body
+    const user= await User.findById(userid)
+    if(!user){
+        return res.status(400).json({message:"no such user exists in single club"})
+    }
+    const VIP = user.isVIP; // Assuming user.isVIP is a boolean (true/false)
+    
+    console.log(VIP);
+    if (!VIP) {
+        // User is not VIP
+        user.isMute = true; // Assuming user.isMute is a boolean field as well
+        await user.save();
+        return res.status(200).json({ message: `you have muted ${user.name} as is not VIP` });
+      } else {
+        // User is VIP
+        console.log('User is VIP');
+        return res.status(200).json({ message: `VIP ${user.name} cannot be mutted` });
+      }
+} catch (error) {
+    console.log(error)
+    res.status(400).json(error)
+}
 }
