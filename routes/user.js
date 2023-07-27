@@ -1,12 +1,25 @@
 const express=require('express')
 const router = express.Router()
 const passport= require('passport')
+const multer = require('multer');
+
 const{Signup,login,verifyOtp,loginWithGoogle,loginWithFacebook,
   loginWithTwitter,getUser,updateuser,deleteuser,maxLiked,likeUser,levelUp,liveSession,luxuryGift,
   luckyGift,handleSuperJackpot,handleSingleSend,handleComboSend,fruitCoinGame,getUserGameHistory,teenPatti,
   coinsCollectedThroughFruitGame,wonAtSeats}= require('../controllers/userController')
+  
+  const storage = multer.diskStorage({
+     destination: (req, file, cb) => {
+       cb(null, 'userFiles/');
+     },
+     filename: (req, file, cb) => {
+       cb(null, file.originalname);
+     }
+   });
+   
+   const userFile = multer({ storage });
 
-router.post('/signup',Signup)
+router.post('/signup',userFile.array('files',2),Signup)
 router.post('/verifyOpt',verifyOtp)
 router.post('/login',login)
 

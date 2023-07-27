@@ -14,7 +14,9 @@ const _ = require('underscore');
 
 exports.Signup = async (req,res)=>{
 
-    const {name,email,password,phoneNo,profilePic,coverPhoto,gender,country,relationship,isVIP,coins,isBan}=req.body;
+    const {name,email,password,phoneNo,gender,country,relationship,isVIP,coins,isBan}=req.body;
+    const  profilePic= req.files[0].path
+    const  coverPic= req.files[1].path
     try{
       
        if(!email || !password ){
@@ -46,7 +48,7 @@ exports.Signup = async (req,res)=>{
 
 
             const hashed =await bcrypt.hash(password,10);
-            const user =new User({name,email,password:hashed,phoneNo,profilePic,coverPhoto,gender,country,relationship,coins,isVIP,isBan});
+            const user =new User({name,email,password:hashed,phoneNo,profilePic,coverPic,gender,country,relationship,coins,isVIP,isBan});
             await user.save();
             console.log('user registered')
           return  res.status(200).json({message:'User Signup in process.verify otp'});
@@ -885,11 +887,60 @@ exports.teenPatti = async(req,res)=>{
     {card1:"A red 🎲",card2:"2 red 🎲",card3:"3 red 🎲",power:5},
     {card1:"6 red 🎲",card2:"5 red 🎲",card3:"4 red 🎲",power:5},
     {card1:"4 red 🎲",card2:"3 red 🎲",card3:"2 red 🎲",power:5},
-
-    {card1:"2 black ☘",card2:"2 red ♥",card3:"2 red 🎲",power:4},
-    {card1:"A red 🎲",card2:"K red 🎲",card3:"J red 🎲",power:3},
-    {card1:"A black🍀",card2:"A red 🎲",card3:"K black ☘",power:2},
-    {card1:"A  black ☘",card2:"K black ☘ ",card3:"J black🍀",power:1}]
+     //sequence 3
+    {card1:"A black ☘",card2:"K red ♥",card3:"Q red 🎲",power:4},
+    {card1:"A red ♥",card2:"2 red 🍀 ",card3:"3 red ☘",power:4},
+    {card1:"K red ☘",card2:"Q red 🎲",card3:"J red 🍀",power:4},
+    {card1:"4 black 🍀",card2:"3 black ☘",card3:"2 black 🍀",power:4},
+     //sequence 4
+    {card1:"A red 🎲",card2:"K red 🎲",card3:"J red 🎲",power:44},
+    {card1:"A black 🍀",card2:"K black 🍀",card3:"10 black 🍀",power:43},
+    {card1:"A black 🍀",card2:"K black 🍀",card3:"9 black 🍀",power:42},
+    {card1:"A black 🍀",card2:"K black 🍀",card3:"8 black 🍀",power:41},
+    {card1:"K black 🍀",card2:"Q black 🍀",card3:"J black 🍀",power:40},
+    {card1:"10 black 🍀",card2:"9 black 🍀",card3:"8 black 🍀",power:39},
+    {card1:"7 black 🍀",card2:"6 black 🍀",card3:"5 black 🍀",power:38},
+    {card1:"5 red 🎲",card2:"3 red 🎲",card3:"2 red 🎲",power:37},
+    //sequence 5
+    {card1:"A black🍀",card2:"A red 🎲",card3:"K black ☘",power:36},
+    {card1:"A black ☘",card2:"A red 🍀",card3:"Q black ☘",power:35},
+    {card1:"A black ☘",card2:"A red 🍀",card3:"J black ☘",power:34},
+    {card1:"A black ☘",card2:"A red 🍀",card3:"10 black ☘",power:33},
+    {card1:"A black ☘",card2:"A red 🍀",card3:"9 black ☘",power:32},
+    {card1:"A black ☘",card2:"A red 🍀",card3:"8 black ☘",power:31},
+    {card1:"A black ☘",card2:"A red 🍀",card3:"7 black ☘",power:30},
+    {card1:"A black ☘",card2:"A red 🍀",card3:"6 black ☘",power:28},
+    {card1:"A black ☘",card2:"A red 🍀",card3:"5 black ☘",power:28},
+    {card1:"A black ☘",card2:"A red 🍀",card3:"4 black ☘",power:27},
+    {card1:"A black ☘",card2:"A red 🍀",card3:"3 black ☘",power:26},
+    {card1:"A black ☘",card2:"A red 🍀",card3:"2 black ☘",power:25},
+    {card1:"K black ☘",card2:"K red 🍀",card3:"Q black ☘",power:24},
+    {card1:"K black ☘",card2:"K red 🍀",card3:"J black ☘",power:23},
+    {card1:"Q black ☘",card2:"Q red 🍀",card3:"10 black ☘",power:22},
+    {card1:"10 black ☘",card2:"10 red 🍀",card3:"9 black ☘",power:21},
+    {card1:"9 black ☘",card2:"9 black ☘",card3:"8 black ☘",power:20},
+    {card1:"8 black ☘",card2:"8 black ☘",card3:"7 black ☘",power:19},
+    {card1:"7 black ☘",card2:"7 black ☘",card3:"6 black ☘",power:18},
+    {card1:"6 black ☘",card2:"6 black ☘",card3:"5 black ☘",power:17},
+    {card1:"5 black ☘",card2:"5 black ☘",card3:"4 black ☘",power:16},
+    {card1:"4 black ☘",card2:"4 black ☘",card3:"3 black ☘",power:15},
+    {card1:"3 black ☘",card2:"3 black ☘",card3:"2 black ☘",power:14},
+    {card1:"2 red ☘",card2:"2 black ☘",card3:"3 black ☘",power:13},
+    //sequence 6
+    {card1:"A  black ☘",card2:"K black ☘ ",card3:"J black🍀",power:12},
+    {card1:"A  black ☘",card2:"K black ☘ ",card3:"Q black🍀",power:11},
+    {card1:"A  black ☘",card2:"K black ☘ ",card3:"10 black🍀",power:10},
+    {card1:"A  black ☘",card2:"K black ☘ ",card3:"9 black🍀",power:9},
+    {card1:"A  black ☘",card2:"K black ☘ ",card3:"8 red 🎲",power:8},
+    {card1:"A  black ☘",card2:"K black ☘ ",card3:"7 red 🎲",power:7},
+    {card1:"A  black ☘",card2:"K black ☘ ",card3:"6 red 🎲",power:6},
+    {card1:"A  black ☘",card2:"K black ☘ ",card3:"5 red 🎲",power:5},
+    {card1:"A  black ☘",card2:"K black ☘ ",card3:"4 red 🎲",power:4},
+    {card1:"A  black ☘",card2:"K black ☘ ",card3:"3 red 🎲",power:3},
+    {card1:"A  black ☘",card2:"K black ☘ ",card3:"2 red 🎲",power:2},
+    {card1:"5  black ☘",card2:"3 black ☘ ",card3:"2 black🍀",power:1}
+  ]
+    
     function excludeFirst() {
       for (let i = 0; i < cards.length; i++) {
           if (cards[i] === firstBox ){

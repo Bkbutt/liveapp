@@ -166,7 +166,12 @@ const vip= require('./routes/vip')
 app.use('/',vip)
 const game = require('./routes/games')
 app.use('/',game)
-
+const post= require('./routes/posts')
+app.use('/',post)
+const video = require('./routes/video')
+app.use('/',video)
+const audio = require('./routes/audio')
+app.use('/',audio)
 app.listen(port, (err) => {
     if (err) console.log(err);
     console.log(`Server running at http://localhost:${port}`);
