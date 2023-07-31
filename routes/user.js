@@ -6,7 +6,8 @@ const multer = require('multer');
 const{Signup,login,verifyOtp,loginWithGoogle,loginWithFacebook,
   loginWithTwitter,getUser,updateuser,deleteuser,maxLiked,likeUser,levelUp,liveSession,luxuryGift,
   luckyGift,handleSuperJackpot,handleSingleSend,handleComboSend,fruitCoinGame,getUserGameHistory,teenPatti,
-  coinsCollectedThroughFruitGame,wonAtSeats}= require('../controllers/userController')
+  coinsCollectedThroughFruitGame,wonAtSeats,SENDchangePhoneNumberOTP,verifyChangePhoneNo
+,changePassword,blockAUser,unblock,getMyBlockedList}= require('../controllers/userController')
   
   const storage = multer.diskStorage({
      destination: (req, file, cb) => {
@@ -70,5 +71,12 @@ router.post('/getUserGameHistory',getUserGameHistory)
 router.post('/teenpatti',teenPatti)
 router.post('/userFruitGameCoins',coinsCollectedThroughFruitGame)
 router.get('/usersWonBySeat3Patti',wonAtSeats)
+router.post('/changePhoneNo',SENDchangePhoneNumberOTP)
+router.post('/verifyChangePhonoNoOtp',verifyChangePhoneNo)
+router.post('/changePassword',changePassword)
+router.post('/blockUser',blockAUser)
+router.post('/unblockUser',unblock)
+router.post('/blockList',getMyBlockedList)
+
 
 module.exports= router

@@ -127,7 +127,7 @@ exports.myPosts = async(req,res)=>{
         const{ userid}=  req.body
        const myPosts= await Post.find({userid:userid})
        if(myPosts ==[]){
-        return res.status(200).json({msg:"seems like you dont have share any post.Post now"})
+        return res.status(200).json({msg:"seems like you dont have shared any post.Post now"})
        }
        return res.status(200).json({msg:"Yours Posts..",myPosts})
 

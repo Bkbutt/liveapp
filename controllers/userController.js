@@ -1175,3 +1175,129 @@ exports.coinsCollectedThroughFruitGame= async(req,res)=>{
     }
 
   }
+
+
+  exports.SENDchangePhoneNumberOTP= async(req,res)=>{
+
+    try {
+      const {newPhoneNo}= req.body
+      const otp = 7777;
+
+      const accountSid = 'ACc7170e203cd0ac7314076ff4f7a06bd0';
+      const authToken = 'a0449104035e03b2a368ccc27d302a87';//pass changed
+      const client = twilio(accountSid, authToken);
+      client.messages.create({
+        body: `Your App OTP is ${otp}`,
+        from: +19894479702, // Twilio phone number
+        to: newPhoneNo // Recipient's phone number
+       })
+      .then(message => console.log('Message sent:', message.sid))
+      .catch(error => console.error('Error:', error));
+      return res.status(200).json({msg:"otp send!"})
+
+    } catch (error) {
+      console.log(error.message)
+      return res.status(400).json({MSG:"ERROR CHANGING PHONEnO"})
+    }
+  }
+
+
+  exports.verifyChangePhoneNo = async(req,res)=>{
+
+    try {
+      const {otp,oldphoneNo,newPhoneNo} = req.body
+      let isCorrectOtp = otp == 7777
+      console.log(isCorrectOtp)
+      if(!isCorrectOtp){
+        return res.status(400).json({msg:"not a valid otp code"})
+      }
+     const user = User.findOne({phoneNo:oldphoneNo})
+       user.phoneNo= newPhoneNo
+       await user.save()
+      return res.status(200).json({msg:"changed your phone no ",user})
+    } catch (error) {
+      console.log(error.message)
+      return res.status(400).json({MSG:"ERROR"})
+    }
+  }
+
+
+  exports.changePassword= async(req,res)=>{
+    try {
+      const{userid,newpassword}= req.body
+      const user = await User.findById(userid)
+      if(user){
+      user.password = await bcrypt.hash(newpassword,10); 
+      await user.save()
+      return res.status(200).send("password changed succesfully"
+      )
+      }
+
+     return res.status(400).json({msg:"user not exists"})
+
+    } catch (error) {
+      console.log(error.message)
+      return res.status(400).json({MSG:"ERROR"})
+    }
+  }
+
+
+exports.blockAUser= async(req,res)=>{
+  try {
+    const {userid, toBeBlockedId}= req.body
+    const user= await User.findById(userid)
+    if(!user) return res.status(400).json({msg:"user not found"})
+    const userToBeBlocked = await User.findById(toBeBlockedId)
+     if(!userToBeBlocked) return res.status(400).json({msg:"user you trying to block doesnt exists"}) 
+
+     const alreadyblocked = user.blocked.some((user)=> user === userToBeBlocked);
+     console.log(isLiked)
+     if(alreadyblocked){
+         return res.json({msg:"you already blocked this user"})  
+     }
+     //add user in blocked list
+      user.blocked.unshift(userToBeBlocked)
+      await user.save()
+    return res.status(400).json({msg:`you blocked ${userToBeBlocked.name}`})
+    
+  } catch (error) {
+    console.log(error.message)
+    return res.status(400).json({MSG:"ERROR"})
+  }
+
+}
+exports.unblock= async(req,res)=>{
+  try {
+    const {userid, toBeUnBlockedId}= req.body
+    const user= await User.findById(userid)
+    if(!user) return res.status(400).json({msg:"user not found"})
+    const userToBeUnBlocked = await User.findById(toBeUnBlockedId)
+     if(!userToBeUnBlocked) return res.status(400).json({msg:"user you trying to unblock doesnt exists"}) 
+
+     const blockedUser = user.blocked.some((user)=> user === userToBeUnBlocked);
+     if(blockedUser){
+      //user in block list now unblock it
+      const index = user.blocked.indexOf(blockedUser)
+      user.blocked.splice(index,1)
+      await user.save()
+      return res.status(400).json({msg:`you unblocked ${blockedUser.name}`})
+     }
+     return res.status(400).json({msg:`user not in block list .cannot unblock it`})
+
+  } catch (error) {
+    console.log(error.message)
+    return res.status(400).json({MSG:"ERROR"})
+  }
+}
+exports.getMyBlockedList= async(req,res)=>{
+  try {
+    const {userid}= req.body
+    const user= await User.findById(userid)
+    if(!user) return res.status(400).json({msg:"user not found"})
+    return   res.status(200).json({BlockedUsers:user.blocked})
+  } catch (error) {
+    console.log(error.message)
+    return res.status(400).json({MSG:"ERROR"})
+  }
+}
+

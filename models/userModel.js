@@ -30,6 +30,7 @@ isBan:{type:Boolean,default:false},
 isMute:{type:Boolean,default:false},
 isVIP:{type:Boolean},
 likes:{type:Array},
-lives:{type:Array}
+lives:{type:Array},
+blocked:{type:Array}
 })
 module.exports= mongoose.model('User',userSchema)
