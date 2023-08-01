@@ -9,7 +9,7 @@ phoneNo:{type:Number},
 transactions:{type:Array},
 teenPattiTrans: {type:Array},
 blockExpiresAt:{type:String},
-level:{type:Number},
+level:{type:Number,default:0},
 levelName:{type:String},
 levelIcon:{type:String},
 coins:{type:Number},
@@ -31,6 +31,7 @@ isMute:{type:Boolean,default:false},
 isVIP:{type:Boolean},
 likes:{type:Array},
 lives:{type:Array},
-blocked:{type:Array}
+blocked:{type:Array},
+myStore:{type:Array}
 })
 module.exports= mongoose.model('User',userSchema)

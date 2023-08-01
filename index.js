@@ -172,6 +172,16 @@ const video = require('./routes/video')
 app.use('/',video)
 const audio = require('./routes/audio')
 app.use('/',audio)
+const ad = require('./routes/ad')
+app.use('/',ad)
+const gameStore = require('./routes/gameStore')
+app.use('/',gameStore)
+const levels = require('./routes/levels')
+app.use('/',levels)
+const eStore = require('./routes/eStore')
+app.use('/',eStore)
+
+
 app.listen(port, (err) => {
     if (err) console.log(err);
     console.log(`Server running at http://localhost:${port}`);

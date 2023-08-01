@@ -1,15 +1,17 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
-const adSchema = mongoose.Schema({
+const adSchema = new mongoose.Schema({
+  adTitle: { type: String, required: true },
+  city: { type: String, required: true },
+  adFile: { type: String, required: true }, // Assuming the file path is stored as a string
+  ageGroup: { type: String, required: true },
+  adType: { type: String, required: true },
+  content: { type: String, required: true },
+  likes: { type: Number, default: 0 },
+  comments: [{ type: String }],
+  interestedAgeGroups: [{ type: String }], // Interested age groups for this ad
+  interestedCities: [{ type: String }], // Interested cities for this ad
+});
 
-adTitle:{type:String},
-city:{type:String},
-ageGroup:{type:String},
-adType:{type:String,enum:['text','picture','audio','video']},
-content:{type:String},
-adFile:{type:String},
-likes:{type: Array},
-comments:{type:Array},
-
-})
-mongoose.model('Ad',adSchema)
+const Ad = mongoose.model('Ad', adSchema);
+module.exports = Ad;
