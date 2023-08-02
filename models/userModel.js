@@ -26,12 +26,15 @@ profilePic:{type:String},
 coverPic:{type:String},
 coverPhoto:{type:String},
 userLevel:{type:String},
+isOnline:{type:Boolean,default:false},
 isBan:{type:Boolean,default:false},
 isMute:{type:Boolean,default:false},
 isVIP:{type:Boolean},
 likes:{type:Array},
 lives:{type:Array},
 blocked:{type:Array},
-myStore:{type:Array}
+myStore:{type:Array},
+friends:{type:Array},
+friendRequests:{type:Array}
 })
 module.exports= mongoose.model('User',userSchema)

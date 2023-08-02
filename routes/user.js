@@ -6,8 +6,9 @@ const multer = require('multer');
 const{Signup,login,verifyOtp,loginWithGoogle,loginWithFacebook,
   loginWithTwitter,getUser,updateuser,deleteuser,maxLiked,likeUser,levelUp,liveSession,luxuryGift,
   luckyGift,handleSuperJackpot,handleSingleSend,handleComboSend,fruitCoinGame,getUserGameHistory,teenPatti,
-  coinsCollectedThroughFruitGame,wonAtSeats,SENDchangePhoneNumberOTP,verifyChangePhoneNo
-,changePassword,blockAUser,unblock,getMyBlockedList}= require('../controllers/userController')
+  coinsCollectedThroughFruitGame,wonAtSeats,SENDchangePhoneNumberOTP,verifyChangePhoneNo,sendFriendRequest
+,changePassword,blockAUser,unblock,getMyBlockedList,getOnlineUsers,
+deleteRequest,acceptFriendRequest,rejectRequest,unFriend}= require('../controllers/userController')
   
   const storage = multer.diskStorage({
      destination: (req, file, cb) => {
@@ -57,7 +58,6 @@ router.get('/user/:id',getUser)
 router.post('/updateUser',updateuser)
 router.delete('/deleteuser/:id',deleteuser)
 router.post('/:userId/likeUser',likeUser)
-// router.get('/likeuser/:userid/:fanid',likeUser)
 router.get('/getmaxlikes',maxLiked)
 router.post('/levelcheck',levelUp)
 router.post('/liveSession',liveSession)
@@ -77,6 +77,12 @@ router.post('/changePassword',changePassword)
 router.post('/blockUser',blockAUser)
 router.post('/unblockUser',unblock)
 router.post('/blockList',getMyBlockedList)
+router.get('/onlineUsers',getOnlineUsers)
+router.post('/sendFriendRequest',sendFriendRequest)
+router.post('/deleteFriendRequest',deleteRequest)
+router.post('/acceptFriendRequest',acceptFriendRequest)
+router.post('/rejectFriendRequest',rejectRequest)
+router.post('/unfriend',unFriend)
 
 
 module.exports= router

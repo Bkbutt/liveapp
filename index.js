@@ -3,6 +3,14 @@ const app = express();
 require('dotenv').config({path:'./.env'});
 const db= require('./db/conn')
 db();
+const { chatSocket } = require('socket.io');
+const server = require('http').createServer(app);
+const io = require('socket.io')(server);
+// Set up WebSocket (Socket.IO) logic
+// io.on('connection', chatSocket);
+io.on("connection", () => {
+  console.log('connection successful');
+});
 
 const session = require('express-session');
 app.use(session({

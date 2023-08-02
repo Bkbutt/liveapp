@@ -1301,3 +1301,111 @@ exports.getMyBlockedList= async(req,res)=>{
   }
 }
 
+exports.getOnlineUsers = async(req,res)=>{
+
+  try {
+    
+    const users = await User.find({isOnline:true})
+    return res.status(200).json({success:true,users})
+  } catch (error) {
+    console.log(error.message)
+    return res.status(400).json({MSG:"ERROR"})
+  }
+}
+
+exports.sendFriendRequest= async(req,res)=>{
+  try {
+    const{senderid, reciverid}= req.body
+    const sender =await User.findById(senderid)
+    const reciever =await User.findById(reciverid)
+      const reqDetail ={
+        id:sender._id,
+        profilePic:sender.profilePic,
+        Name:sender.name
+      }
+      reciever.friendRequests.unshift(reqDetail)
+      await reciever.save()
+      return res.json({msg:"friend request has been sent"})
+
+  } catch (error) {
+    console.log(error.message)
+    return res.status(400).json({MSG:"ERROR"})
+  }
+}
+
+exports.deleteRequest = async(req,res)=>{
+  try {
+    const{senderid, reciverid}= req.body
+    const sender =await User.findById(senderid)
+    const reciever =await User.findById(reciverid)
+   const fr= reciever.sendRequests.find((req)=> req.id === sender._id)
+   if(fr){
+    const index = reciever.sendRequests.indexOf(fr)
+    reciever.sendRequests.splice(index,1)
+    await reciever.save()
+    return res.json({msg:"you deleted friend request "})
+   }
+   return res.json({msg:"you dont send any req to this user "})
+  } catch (error) {
+    console.log(error.message)
+    return res.status(400).json({MSG:"ERRor"})
+  }
+}
+
+
+exports.acceptFriendRequest = async(req,res)=>{
+  try {
+    const{senderid, reciverid}= req.body
+    const sender =await User.findById(senderid)
+    const reciever =await User.findById(reciverid)
+
+    reciever.friends.unshift(sender)
+    await reciever.save()
+    sender.friends.unshift(reciever)
+    await sender.save()
+    return res.json({msg:"you both are now friends "})
+  } catch (error) {
+    console.log(error.message)
+    return res.status(400).json({MSG:"ERRor"})
+  }
+}
+
+exports.rejectRequest = async(req,res)=>{
+  try {
+    const{senderid, reciverid}= req.body
+    const sender =await User.findById(senderid)
+    const reciever =await User.findById(reciverid)
+    const fr= reciever.sendRequests.find((req)=> req.id === sender._id)
+    if(fr){
+     const index = reciever.sendRequests.indexOf(fr)
+     reciever.sendRequests.splice(index,1)
+     await reciever.save()
+     return res.json({msg:"you rejected friend request "})
+    }
+    return res.json({msg:"this user didnt send you req "})
+
+  } catch (error) {
+    console.log(error.message)
+    return res.status(400).json({MSG:"ERRor"})
+  }
+}
+
+
+exports.unFriend = async(req,res)=>{
+  try {
+    const{userid, tobeUnfriendId}= req.body
+    const user =await User.findById(userid)
+    const toBeUnfriend =await User.findById(tobeUnfriendId)
+    const isFriend =user.friends.find((frnd)=> frnd === toBeUnfriend)
+    if(isFriend){
+      const index = user.friends.indexOf(isFriend)
+      user.friends.splice(index,1)
+      await user.save()
+      return res.json({msg:"you unFriend this user "}) 
+    }
+    return res.json({msg:"user already not your friend"}) 
+  } catch (error) {
+    console.log(error.message)
+    return res.status(400).json({MSG:"ERRor"})
+  }
+}
