@@ -6,11 +6,32 @@ db();
 const { chatSocket } = require('socket.io');
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
-// Set up WebSocket (Socket.IO) logic
-// io.on('connection', chatSocket);
-io.on("connection", () => {
-  console.log('connection successful');
-});
+const connectedUsers = {}; // Initialize an empty object to store connected users
+
+// ... (Other configurations)
+
+// Socket.io connection handling
+io.on('connection', (socket) => {
+  console.log('New user connected:', socket.id);
+
+  // Handle user registration and add to 'connectedUsers'
+  socket.on('registerUser', ({ userid }) => {
+    connectedUsers[userid] = socket; // Store the socket connection using the user ID
+    console.log('User registered:', userid);
+  });
+
+  // Handle user disconnection and remove from 'connectedUsers'
+  socket.on('disconnect', () => {
+    // Find and remove the user from 'connectedUsers'
+    for (const [userid, socketInstance] of Object.entries(connectedUsers)) {
+      if (socketInstance === socket) {
+        delete connectedUsers[userid];
+        console.log('User disconnected:', userid);
+        break;
+      }
+    }
+  });
+}); 
 
 const session = require('express-session');
 app.use(session({
