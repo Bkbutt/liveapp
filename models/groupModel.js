@@ -7,13 +7,18 @@ const groupModel = mongoose.Schema({
  about:{type:String},
  Admins: { type:Array},
   members: {type:Array },//join members,
-  posts: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Post', // Reference to the Post schema
-    },
-  ],
- dateCreated:{type:String},
+  posts:{type:Array},
+  userid: { type: mongoose.Schema.Types.ObjectId,ref: 'User'},//member which threw this post
+  postType:{type:String,enum:['text','picture','audio','video']},
+  content:{type:String},
+  postFile:{type:String},
+  stickers:{type:[{type:String}]},
+  tags:{type: [  { type: mongoose.Schema.Types.ObjectId,ref: 'User'}]},
+  likes:{type: Array},
+  groupId: { type: mongoose.Schema.Types.ObjectId,ref: 'Group'},
+  comments:{type:Array},
+  location:{type:String,  immutable: false},
+ dateCreated:{type:String,default:new Date()},
  time:{type:String},
 
 

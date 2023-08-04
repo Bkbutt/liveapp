@@ -863,35 +863,35 @@ exports.teenPatti = async(req,res)=>{
     await wait(SECONDS_FOR_BETTING - elapsedTimeSeconds);//first call to promise
     const cards = [
       //sequence 1 cards
-    {card1:"A red ♥",card2:"A black ☘",card3:"A black🍀",power:6},
-    {card1:"K red ♥",card2:"K black ☘",card3:"K black🍀",power:6},
-    {card1:"Q red ♥",card2:"Q black ☘",card3:"Q black🍀",power:6},
-    {card1:"J red ♥",card2:"J black ☘",card3:"J black🍀",power:6},
-    {card1:"10 red ♥",card2:"10 black ☘",card3:"10 black🍀",power:6},
-    {card1:"9 red ♥",card2:"9 black ☘",card3:"9 black🍀",power:6},
-    {card1:"8 red ♥",card2:"8 black ☘",card3:"8 black🍀",power:6},
-    {card1:"7 red ♥",card2:"7 black ☘",card3:"7 black🍀",power:6},
-    {card1:"6 red ♥",card2:"6 black ☘",card3:"6 black🍀",power:6},
-    {card1:"5 red ♥",card2:"5 black ☘",card3:"5 black🍀",power:6},
-    {card1:"4 red ♥",card2:"4 black ☘",card3:"4 black🍀",power:6},
+    {card1:"A red ♥",card2:"A black ☘",card3:"A black🍀",power:71},
+    {card1:"K red ♥",card2:"K black ☘",card3:"K black🍀",power:70},
+    {card1:"Q red ♥",card2:"Q black ☘",card3:"Q black🍀",power:69},
+    {card1:"J red ♥",card2:"J black ☘",card3:"J black🍀",power:68},
+    {card1:"10 red ♥",card2:"10 black ☘",card3:"10 black🍀",power:67},
+    {card1:"9 red ♥",card2:"9 black ☘",card3:"9 black🍀",power:66},
+    {card1:"8 red ♥",card2:"8 black ☘",card3:"8 black🍀",power:65},
+    {card1:"7 red ♥",card2:"7 black ☘",card3:"7 black🍀",power:64},
+    {card1:"6 red ♥",card2:"6 black ☘",card3:"6 black🍀",power:63},
+    {card1:"5 red ♥",card2:"5 black ☘",card3:"5 black🍀",power:62},
+    {card1:"4 red ♥",card2:"4 black ☘",card3:"4 black🍀",power:61},
     //sequence 2 cards
-    {card1:"A red 🎲",card2:"K red 🎲",card3:"Q red 🎲",power:5},
-    {card1:"A red 🎲",card2:"10 red 🎲",card3:"9 red 🎲",power:5},
-    {card1:"K red 🎲",card2:"Q red 🎲",card3:"J red 🎲",power:5},
-    {card1:"A red 🎲",card2:"9 red 🎲",card3:"8 red 🎲",power:5},
-    {card1:"Q red 🎲",card2:"J red 🎲",card3:"10 red 🎲",power:5},
-    {card1:"A red 🎲",card2:"8 red 🎲",card3:"7 red 🎲",power:5},
-    {card1:"10 red 🎲",card2:"9 red 🎲",card3:"8 red 🎲",power:5},
-    {card1:"A red 🎲",card2:"7 red 🎲",card3:"8 red 🎲",power:5},
-    {card1:"8 red 🎲",card2:"7 red 🎲",card3:"6 red 🎲",power:5},
-    {card1:"A red 🎲",card2:"2 red 🎲",card3:"3 red 🎲",power:5},
-    {card1:"6 red 🎲",card2:"5 red 🎲",card3:"4 red 🎲",power:5},
-    {card1:"4 red 🎲",card2:"3 red 🎲",card3:"2 red 🎲",power:5},
+    {card1:"A red 🎲",card2:"K red 🎲",card3:"Q red 🎲",power:60},
+    {card1:"A red 🎲",card2:"10 red 🎲",card3:"9 red 🎲",power:59},
+    {card1:"K red 🎲",card2:"Q red 🎲",card3:"J red 🎲",power:57},
+    {card1:"A red 🎲",card2:"9 red 🎲",card3:"8 red 🎲",power:57},
+    {card1:"Q red 🎲",card2:"J red 🎲",card3:"10 red 🎲",power:56},
+    {card1:"A red 🎲",card2:"8 red 🎲",card3:"7 red 🎲",power:55},
+    {card1:"10 red 🎲",card2:"9 red 🎲",card3:"8 red 🎲",power:54},
+    {card1:"A red 🎲",card2:"7 red 🎲",card3:"8 red 🎲",power:53},
+    {card1:"8 red 🎲",card2:"7 red 🎲",card3:"6 red 🎲",power:52},
+    {card1:"A red 🎲",card2:"2 red 🎲",card3:"3 red 🎲",power:51},
+    {card1:"6 red 🎲",card2:"5 red 🎲",card3:"4 red 🎲",power:50},
+    {card1:"4 red 🎲",card2:"3 red 🎲",card3:"2 red 🎲",power:49},
      //sequence 3
-    {card1:"A black ☘",card2:"K red ♥",card3:"Q red 🎲",power:4},
-    {card1:"A red ♥",card2:"2 red 🍀 ",card3:"3 red ☘",power:4},
-    {card1:"K red ☘",card2:"Q red 🎲",card3:"J red 🍀",power:4},
-    {card1:"4 black 🍀",card2:"3 black ☘",card3:"2 black 🍀",power:4},
+    {card1:"A black ☘",card2:"K red ♥",card3:"Q red 🎲",power:48},
+    {card1:"A red ♥",card2:"2 red 🍀 ",card3:"3 red ☘",power:47},
+    {card1:"K red ☘",card2:"Q red 🎲",card3:"J red 🍀",power:46},
+    {card1:"4 black 🍀",card2:"3 black ☘",card3:"2 black 🍀",power:45},
      //sequence 4
     {card1:"A red 🎲",card2:"K red 🎲",card3:"J red 🎲",power:44},
     {card1:"A black 🍀",card2:"K black 🍀",card3:"10 black 🍀",power:43},
@@ -909,7 +909,7 @@ exports.teenPatti = async(req,res)=>{
     {card1:"A black ☘",card2:"A red 🍀",card3:"9 black ☘",power:32},
     {card1:"A black ☘",card2:"A red 🍀",card3:"8 black ☘",power:31},
     {card1:"A black ☘",card2:"A red 🍀",card3:"7 black ☘",power:30},
-    {card1:"A black ☘",card2:"A red 🍀",card3:"6 black ☘",power:28},
+    {card1:"A black ☘",card2:"A red 🍀",card3:"6 black ☘",power:29},
     {card1:"A black ☘",card2:"A red 🍀",card3:"5 black ☘",power:28},
     {card1:"A black ☘",card2:"A red 🍀",card3:"4 black ☘",power:27},
     {card1:"A black ☘",card2:"A red 🍀",card3:"3 black ☘",power:26},
@@ -1323,6 +1323,9 @@ exports.sendFriendRequest= async(req,res)=>{
         profilePic:sender.profilePic,
         Name:sender.name
       }
+      const alreadySent = reciever.friendRequests.map((req)=> req.id === sender._id)
+      console.log(alreadySent)
+      if(alreadySent.length > 0)    return res.json({msg:"request already sent"})
       reciever.friendRequests.unshift(reqDetail)
       await reciever.save()
       return res.json({msg:"friend request has been sent"})
@@ -1338,10 +1341,11 @@ exports.deleteRequest = async(req,res)=>{
     const{senderid, reciverid}= req.body
     const sender =await User.findById(senderid)
     const reciever =await User.findById(reciverid)
-   const fr= reciever.sendRequests.find((req)=> req.id === sender._id)
+   const fr= reciever.friendRequests.map((req)=> req.id === sender._id)
+  //  console.log(fr)
    if(fr){
-    const index = reciever.sendRequests.indexOf(fr)
-    reciever.sendRequests.splice(index,1)
+    const index = reciever.friendRequests.indexOf(fr)
+    reciever.friendRequests.splice(index,1)
     await reciever.save()
     return res.json({msg:"you deleted friend request "})
    }
@@ -1358,14 +1362,41 @@ exports.acceptFriendRequest = async(req,res)=>{
     const{senderid, reciverid}= req.body
     const sender =await User.findById(senderid)
     const reciever =await User.findById(reciverid)
+    // Check if users exist
+    if (!sender || !reciever) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+    // Check if the users are already friends
+    if (sender.friends.some((friend) => friend._id.equals(reciever._id)) || reciever.friends.some((friend) => friend._id.equals(sender._id))) {
+      return res.json({ msg: "You both are already friends" });
+    }
 
-    reciever.friends.unshift(sender)
-    await reciever.save()
-    sender.friends.unshift(reciever)
-    await sender.save()
+    // Add each other to the "friends" arrays
+    sender.friends.unshift(reciever);
+    await sender.save();
+    console.log('saving sender');
+
+    // Reset the reference in the receiver object to avoid circular reference
+    const receiverFriend = {
+      _id: sender._id,
+      profilePic: sender.profilePic,
+      name: sender.name
+    };
+    reciever.friends.unshift(receiverFriend);
+    await reciever.save();
+    console.log('saving reciever');
+
+    const fr= reciever.friendRequests.map((req)=> req.id === sender._id)
+   if(fr.length>0){
+     const index = reciever.friendRequests.indexOf(fr)
+     reciever.friendRequests.splice(index,1)
+     await reciever.save()// deleting req
+
+   }
+    
     return res.json({msg:"you both are now friends "})
   } catch (error) {
-    console.log(error.message)
+    console.log(error)
     return res.status(400).json({MSG:"ERRor"})
   }
 }
@@ -1375,10 +1406,10 @@ exports.rejectRequest = async(req,res)=>{
     const{senderid, reciverid}= req.body
     const sender =await User.findById(senderid)
     const reciever =await User.findById(reciverid)
-    const fr= reciever.sendRequests.find((req)=> req.id === sender._id)
-    if(fr){
-     const index = reciever.sendRequests.indexOf(fr)
-     reciever.sendRequests.splice(index,1)
+    const fr= reciever.friendRequests.map((req)=> req.id === sender._id)
+    if(fr.length >0){
+     const index = reciever.friendRequests.indexOf(fr)
+     reciever.friendRequests.splice(index,1)
      await reciever.save()
      return res.json({msg:"you rejected friend request "})
     }
@@ -1396,8 +1427,8 @@ exports.unFriend = async(req,res)=>{
     const{userid, tobeUnfriendId}= req.body
     const user =await User.findById(userid)
     const toBeUnfriend =await User.findById(tobeUnfriendId)
-    const isFriend =user.friends.find((frnd)=> frnd === toBeUnfriend)
-    if(isFriend){
+    const isFriend =user.friends.map((frnd)=> frnd._id === toBeUnfriend._id)
+    if(isFriend.length>0){
       const index = user.friends.indexOf(isFriend)
       user.friends.splice(index,1)
       await user.save()

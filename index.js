@@ -209,6 +209,8 @@ const levels = require('./routes/levels')
 app.use('/',levels)
 const eStore = require('./routes/eStore')
 app.use('/',eStore)
+const group = require('./routes/group')
+app.use('/',group)
 
 
 app.listen(port, (err) => {
