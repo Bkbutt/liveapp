@@ -7,13 +7,16 @@ const { chatSocket } = require('socket.io');
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 const connectedUsers = {}; // Initialize an empty object to store connected users
-
+const bodyParser = require('body-parser');
+app.use(express.json({ limit: '50mb' })); 
 // ... (Other configurations)
 
 // Socket.io connection handling
 io.on('connection', (socket) => {
   console.log('New user connected:', socket.id);
 
+
+  
   // Handle user registration and add to 'connectedUsers'
   socket.on('registerUser', ({ userid }) => {
     connectedUsers[userid] = socket; // Store the socket connection using the user ID
@@ -211,7 +214,11 @@ const eStore = require('./routes/eStore')
 app.use('/',eStore)
 const group = require('./routes/group')
 app.use('/',group)
-
+const product= require('./routes/product')
+app.use('/',product)
+const agency= require('./routes/agency')
+app.use('/',agency
+)
 
 app.listen(port, (err) => {
     if (err) console.log(err);

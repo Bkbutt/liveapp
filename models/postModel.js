@@ -6,6 +6,7 @@ const postModel =mongoose.Schema({
  content:{type:String},
  postFile:{type:String},
  stickers:{type:[{type:String}]},
+ category:{type:String,enum:['Beauty','Entertainment','Sports','Adventure','Education','Fashion','Politics','Love']},
  tags:{type: [  { type: mongoose.Schema.Types.ObjectId,ref: 'User'}]},
  likes:{type: Array},
  comments:{type:Array},

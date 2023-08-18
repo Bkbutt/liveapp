@@ -6,15 +6,18 @@ exports.createPost = async(req,res)=>{
 try {
     const{userid,postType,content,stickers,tags,likes,comments,copyLink,noOfShares,noOfreports
     ,location,postUploadTime,downloadPost}=req.body
+    if(!userid || !postType){
+        return res.status(400).json({error:"post cant be empty or userid not given"})
+    }
     console.log(req.file)
     const postFile = req.file.path;//file upload either pic audio video
-   if(!userid || !postType){
-    return res.status(400).json({error:"post cant be empty or userid not given"})
-   }
    const post = new Post({userid:userid,postFile,postType,content,stickers,tags,likes,comments,copyLink
                           ,noOfShares,noOfreports,location,postUploadTime,downloadPost})
 
     await post.save()                    
+    const user = await User.findById(userid)
+    user.mediaCount+=1
+    await user.save()                      
     return res.status(200).json({success:true,post:post})
     
 } catch (error) {
@@ -154,4 +157,72 @@ exports.getAllPosts = async(req,res)=>{
         return res.status(400).json(error)   
     }
 
+}
+
+exports.getMediaCountThisMonth=async(req,res)=>{
+    try {
+        const users = await User.find({});
+    
+        const currentMonth=new Date().getMonth()
+        const currentYear=new Date().getFullYear()
+        const monthUsers = users.filter((user) => {
+          const userDate = new Date(user.time);
+          return (
+            userDate.getMonth() === currentMonth && // Month is 0-indexed
+            userDate.getFullYear() === currentYear
+          );
+        });
+      
+        let monthMedia=0
+      monthUsers.map((user=>{
+        monthMedia+=user.mediaCount
+      }))
+  return res.status(400).json({msg:`total media uploded by this month new users is:${monthMedia}`})
+    } catch (error) {
+        console.log(error.message)
+        return res.status(400).json(error)   
+    }
+}
+
+exports.getTimelinePostsForNew=async(req,res)=>{
+    try {
+        function mixAndMatchPosts(arr1, arr2) {
+            const mixedPosts = [];
+            const minLength = Math.min(arr1.length, arr2.length);
+            
+            for (let i = 0; i < minLength; i++) {
+                mixedPosts.push(arr1[i]);
+                mixedPosts.push(arr2[i]);
+            }
+            
+            // If one array is longer than the other, add the remaining posts
+            mixedPosts.push(...arr1.slice(minLength));
+            mixedPosts.push(...arr2.slice(minLength));
+            
+            return mixedPosts;
+        }
+         const{userid}=req.body
+         const user =await User.findById(userid)
+         const posts = await Post.find({});
+         const countryposts = [];
+         
+         for (const post of posts) {
+             const postUser = await User.findById(post.userid);
+             if (postUser.country == user.country) {
+                 countryposts.push(post);
+             }
+         }
+         //trend posts
+         const trendRegex = /trend|popular/gi;
+          const trendPosts = countryposts.filter(post => trendRegex.test(post.content));
+        //category wise posts
+        const interestPosts=await Post.find({category:user.interest}) 
+               // Combine trend posts and interest posts
+               const combinedPosts = mixAndMatchPosts(trendPosts, interestPosts);
+        
+               return res.status(200).json(combinedPosts);
+    } catch (error) {
+        console.log(error.message)
+        return res.status(400).json(error)     
+    }
 }

@@ -14,9 +14,11 @@ const _ = require('underscore');
 
 exports.Signup = async (req,res)=>{
 
-    const {name,email,password,phoneNo,gender,country,relationship,isVIP,coins,isBan}=req.body;
-    const  profilePic= req.files[0].path
-    const  coverPic= req.files[1].path
+    const {name,email,password,phoneNo,gender,country,interest,relationship,isVIP,coins,isBan}=req.body;
+    const {profilePic,coverPic }= req.body
+    
+    // const  profilePic= req.files[0].path
+    // const  coverPic= req.files[1].path
     try{
       
        if(!email || !password ){
@@ -48,7 +50,7 @@ exports.Signup = async (req,res)=>{
 
 
             const hashed =await bcrypt.hash(password,10);
-            const user =new User({name,email,password:hashed,phoneNo,profilePic,coverPic,gender,country,relationship,coins,isVIP,isBan});
+            const user =new User({name,email,password:hashed,phoneNo,profilePic,coverPic,gender,interest,country,relationship,coins,isVIP,isBan});
             await user.save();
             console.log('user registered')
           return  res.status(200).json({message:'User Signup in process.verify otp'});
@@ -94,7 +96,55 @@ try {
 }
 
 }
+exports.createAdmin= async(req,res)=>{
+  const {name,email,password,phoneNo,gender,country,relationship,role,isVIP,coins,isBan}=req.body;
+  const {profilePic,coverPic }= req.body
+  
+  // const  profilePic= req.files[0].path
+  // const  coverPic= req.files[1].path
+  try {
+    if(!email || !password ){
+      return   res.status(400).json({message:"Please fill the required Credentials"} );
+   }
+   const userExists = await User.findOne({email:email});
+if (userExists){
+    console.log('user already exists')
+    return res.status(400).json({message:'This user already exists!'})
+}
+else{
+ const otp = 7777;
 
+ const ttl = 1000 * 60 * 2; // 2 min
+ const expires = Date.now() + ttl;
+ const data = `${phoneNo}.${otp}.${expires}`;
+ const hash=crypto.createHmac('sha256',"shazo").update(data).digest('hex');
+
+ const accountSid = 'ACc7170e203cd0ac7314076ff4f7a06bd0';
+ const authToken = 'a0449104035e03b2a368ccc27d302a87';//pass changed
+ const client = twilio(accountSid, authToken);
+ client.messages.create({
+   body: `Your App OTP is ${otp} and hash: ${hash}.${expires}`,
+   from: +19894479702, // Twilio phone number
+   to: phoneNo // Recipient's phone number
+  })
+ .then(message => console.log('Message sent:', message.sid))
+ .catch(error => console.error('Error:', error));
+
+
+     const hashed =await bcrypt.hash(password,10);
+     const user =new User({name,email,password:hashed,phoneNo,profilePic,coverPic,gender,role:role,country,relationship,coins,isVIP,isBan});
+    user.role="admin"
+     await user.save();
+     console.log('user registered')
+   return  res.status(200).json({message:'admin Signup in process.verify otp'});
+
+}  
+  } catch (error) {
+    console.log(error.message)
+    res.status(404).json({error})
+  }
+}
+  
 exports.login= async(req,res)=>{
 
     const {email ,password,phoneNo}= req.body;
@@ -500,18 +550,61 @@ function generateUniqueUserId() {
 
 exports.luxuryGift=async(req,res)=>{
      try {
-       const{senderid,recieverid,coins}= req.body
+       const{senderid,recieverid,Coins,adminId}= req.body
        const sender = await User.findById(senderid)
        if(!sender)
        { return res.status(400).send("no such sender")}
        const reciever= await User.findById(recieverid)
        if(!reciever)
        { return res.status(400).send("no such reciever exists")}
+       const admin = await User.findById(adminId);
 
-       const actualCoins = 0.9 * coins
-       reciever.coins = reciever.coins + actualCoins;
+       if (!admin) {
+         return res.status(404).json({ error: 'admin not found' });
+       }
 
-       sender.coins= sender.coins - coins;
+       const coinString = Coins.toString();//asuming coins sent as 10k or 4k
+       const   coins   =parseInt(coinString.replace("k",""))
+       console.log(coins)
+       coins*= 1000;
+       if (sender.coins < coins) {//check if user has coins or not
+         return res.status(400).send('You don\'t have enough coins to send gift');
+       }
+   
+       sender.coins-=coins;
+       await sender.save()//cut sender coins
+
+       
+       const adminCoins = 0.1*coins//10n perc to admin
+       admin.coins+=adminCoins
+       const atransaction = {
+        senderid,
+        recieverid,
+        lostCoins: actualCoins,
+        collectedCoins:adminCoins,
+        gift: 'luxury',
+        timestamp: new Date(),
+      };
+  
+      // Save the transaction to the database
+      admin.transactions.push(atransaction);
+       await admin.save()
+
+
+       const actualCoins = 0.9 * coins//send 90 to reveier
+       reciever.coins+=actualCoins;
+       const transaction = {
+        senderid,
+        collectedCoins: actualCoins,
+        admin:adminCoins,
+        gift: 'luxury',
+        timestamp: new Date(),
+      };
+  
+      // Save the transaction to the database
+      reciever.transactions.push(transaction);
+       await reciever.save()
+
       return res.status(200).json({message:"gift awarded",sender,reciever})
      } catch (error) {
       console.log(error)
@@ -522,18 +615,59 @@ exports.luxuryGift=async(req,res)=>{
 
 exports.luckyGift=async(req,res)=>{
   try {
-    const{senderid,recieverid,coins}= req.body
+    const{senderid,recieverid,Coins,adminId}= req.body
     const sender = await User.findById(senderid)
     if(!sender)
     { return res.status(400).send("no such sender exists")}
     const reciever= await User.findById(recieverid)
     if(!reciever)
     { return res.status(400).send("no such reciever exists")}
+    const admin = await User.findById(adminId);
 
-    const actualCoins = 0.1 * coins
-    reciever.coins = reciever.coins + actualCoins;
+    if (!admin) {
+      return res.status(404).json({ error: 'admin not found' });
+    }
+    const coinString = Coins.toString();
+    const   coins   =parseInt(coinString.replace("k",""))
+    console.log(coins)
+    coins*= 1000;
+    if (sender.coins < coins) {
+      return res.status(400).send('You don\'t have enough coins to send gift');
+    }
 
     sender.coins= sender.coins - coins;
+    await sender.save()//cut coins from recever
+
+    const adminCoins= 0.9*coins// 90 prc coins to admin and save
+    admin.coins+= adminCoins
+    const atransaction = {
+      senderid,
+      recieverid,
+      lostCoins: actualCoins,
+      collectedCoins:adminCoins,
+      gift: 'lucky',
+      timestamp: new Date(),
+    };
+
+    // Save the transaction to the database
+    admin.transactions.push(atransaction);
+    await admin.save()
+
+    const actualCoins = 0.1 * coins// 10 prc coins to reviver  andsave 
+    reciever.coins = reciever.coins + actualCoins;
+    const transaction = {
+      senderid,
+      collectedCoins: actualCoins,
+      admin:adminCoins,
+      gift: 'lucky',
+      timestamp: new Date(),
+    };
+
+    // Save the transaction to the database
+    reciever.transactions.push(transaction);
+    await reciever.save()
+  
+
     return res.status(200).json({message:"gift awarded",sender,reciever})
   } catch (error) {
    console.log(error)
@@ -545,7 +679,7 @@ exports.luckyGift=async(req,res)=>{
 
 exports.handleSuperJackpot = async (req, res) => {
   try {
-    const { userId, coinAmount } = req.body;
+    const { userId, coinAmount ,adminId} = req.body;
 
     // Validate request body
     if (!userId || !coinAmount) {
@@ -558,7 +692,11 @@ exports.handleSuperJackpot = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
+    const admin = await User.findById(adminId);
 
+    if (!admin) {
+      return res.status(404).json({ error: 'admin not found' });
+    }
     // Check if the user fulfills the requirements for the super jackpot
     // Let's assume the requirements are being a VIP user and having a minimum coin amount
     const isVIPUser = user.isVIP;
@@ -572,16 +710,39 @@ exports.handleSuperJackpot = async (req, res) => {
     // If the user is eligible, calculate the super jackpot prize (let's assume a random number between 1000 and 5000 coins)
     const superJackpotPrize = Math.floor(Math.random() * (5000 - 1000 + 1) + 1000);
 
+    // Deduct the prize from admin's coins
+    admin.coins -= superJackpotPrize;
+    const atransaction = {
+      userId,
+      adminId,
+      lostCoins: superJackpotPrize,
+      gift: 'superJackpot',
+      timestamp: new Date(),
+    };
 
+    // Save the transaction to the database
+    admin.transactions.push(atransaction);
+    await admin.save();
+    
     // Award the user with the super jackpot prize
     user.coins += superJackpotPrize;
-    await user.save();
+    const transaction = {
+      userId,
+      adminId,
+      collectedCoins: superJackpotPrize,
+      gift: 'superJackpot',
+      timestamp: new Date(),
+    };
 
+    // Save the transaction to the database
+    admin.transactions.push(transaction);
+    await user.save();
+    
     // Trigger a notification for the user about winning the Super Jackpot
     sendNotification(userId, `Congratulations! You won ${superJackpotPrize} coins in the Super Jackpot!`);
-
+    
     return res.json({ message: `Congratulations! You won ${superJackpotPrize} coins in the Super Jackpot!` });
-  } catch (error) {
+  }catch (error) {
     console.error('Error processing Super Jackpot:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
@@ -590,7 +751,7 @@ exports.handleSuperJackpot = async (req, res) => {
 
 exports.handleSingleSend = async (req, res) => {
   try {
-    const { senderId, coinCollectionProbabilities } = req.body;
+    const { senderId, coinCollectionProbabilities,adminId } = req.body;
 
     // Validate request body
     if (!senderId || !coinCollectionProbabilities || !Array.isArray(coinCollectionProbabilities)) {
@@ -603,7 +764,12 @@ exports.handleSingleSend = async (req, res) => {
     if (!sender) {
       return res.status(404).json({ error: 'Sender not found' });
     }
+   
+    const admin = await User.findById(adminId);
 
+    if (!admin) {
+      return res.status(404).json({ error: 'admin not found' });
+    }
     // Function to calculate the coin collection outcome based on provided probabilities
     const getCoinCollectionOutcome = () => {
       const randomNumber = Math.random();
@@ -628,32 +794,43 @@ exports.handleSingleSend = async (req, res) => {
     const transactionFee = (collectedCoins * transactionFeePercentage) / 100;
     const collectedCoinsAfterFee = collectedCoins - transactionFee;
 
-    // Save the single send transaction in the database
-    const transaction = {
-      senderId,
-      collectedCoins: collectedCoinsAfterFee,
+    sender.coins+=collectedCoinsAfterFee
+      // Save the single send transaction in the database
+      const transaction = {
+        collectedCoins: collectedCoinsAfterFee,
+        coinCollectionProbabilities,
+        transactionType: 'singleSend',
+        timestamp: new Date(),
+      };
+      sender.transactions.push(transaction);
+    await sender.save()     
+    admin.coin+=transactionFee
+    const atransaction = {
+      collectedCoins: transactionFee,
       coinCollectionProbabilities,
       transactionType: 'singleSend',
       timestamp: new Date(),
-      // Add other relevant data here if needed
     };
+    admin.transactions.push(atransaction);
+    await admin.save();
 
-    // Save the transaction to the database
-    sender.transactions.push(transaction);
-    await sender.save();
-
-    return res.json(transaction);
+    return res.json(transaction,atransaction);
   } catch (error) {
     console.error('Error processing single send:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
-};
+}; 
 
 
 exports.handleComboSend = async (req, res) => {
   try {
-    const { senderId, coinCollectionProbabilities } = req.body;
+    const { senderId, coinCollectionProbabilities ,adminId} = req.body;
+ 
+    const admin = await User.findById(adminId);
 
+    if (!admin) {
+      return res.status(404).json({ error: 'admin not found' });
+    }
     // Validate request body
     if (!senderId || !coinCollectionProbabilities || !Array.isArray(coinCollectionProbabilities)) {
       return res.status(400).json({ error: 'Invalid request body' });
@@ -689,20 +866,25 @@ exports.handleComboSend = async (req, res) => {
     const transactionFeePercentage = 5;
     const transactionFee = (collectedCoins * transactionFeePercentage) / 100;
     const collectedCoinsAfterFee = collectedCoins - transactionFee;
+    
+    admin.coins+=collectedCoinsAfterFee
+    const atransaction = {
+      collectedCoins: transactionFee,
+      coinCollectionProbabilities,
+      transactionType: 'comboSend',
+      timestamp: new Date(),
+    };
+    admin.transactions.push(atransaction);
+    await admin.save()//admin save give coins to admin
 
-    // Save the combo send transaction in the database
     const transaction = {
-      senderId,
       collectedCoins: collectedCoinsAfterFee,
       coinCollectionProbabilities,
       transactionType: 'comboSend',
       timestamp: new Date(),
-      // Add other relevant data here if needed
     };
-
-    // Save the transaction to the database
     sender.transactions.push(transaction);
-    await sender.save();
+    await sender.save()   
 
     return res.json(transaction);
   } catch (error) {
@@ -715,12 +897,16 @@ exports.fruitCoinGame = async (req, res) => {
   
   let gameStartTime = null;
   try {
-    const { userid, betCoins } = req.body;
+    const { userid, betCoins,adminId } = req.body;
     const user = await User.findById(userid);
     if (!user) {
       return res.status(400).send('No user found');
     }
+    const admin = await User.findById(adminId);
 
+    if (!admin) {
+      return res.status(404).json({ error: 'admin not found' });
+    }
     // Check if the user is blocked and the block has not expired
     if (user.blockExpiresAt && user.blockExpiresAt > new Date()) {
       const remainingTime = (user.blockExpiresAt - new Date()) / (1000 * 60 * 60);
@@ -762,15 +948,17 @@ exports.fruitCoinGame = async (req, res) => {
     if (user.coins < coins) {
       return res.status(400).send('You don\'t have enough coins');
     }
-
+    admin.coins+=coins
+    await admin.save()
     const cards = ['apple', 'grapes', 'orange'];
     const card = _.sample(cards);
 
     let rewardedCoins = 0;
     if (card === 'apple' || card === 'orange') {
-      
        rewardedCoins = coins * 2
       console.log('reward',rewardedCoins)
+      admin.coins-=rewardedCoins
+      await admin.save()
       user.coins += rewardedCoins;
       await user.save();
      
@@ -778,6 +966,8 @@ exports.fruitCoinGame = async (req, res) => {
      
       rewardedCoins = coins * 7
       console.log('reward',rewardedCoins)
+      admin.coins-=rewardedCoins
+      await admin.save()
       user.coins += rewardedCoins;
     
       await user.save();
@@ -833,12 +1023,17 @@ exports.teenPatti = async(req,res)=>{
     return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
   }
   try {
-    const { users, betCoins } = req.body;
+    const { users, betCoins,adminId } = req.body;
     for(const user of users){
         const isExists =    await User.findById(user.userid)
         if (!isExists) {
           return res.status(400).json({message:` A user  do not exist`});
         }
+    }
+    const admin = await User.findById(adminId);
+
+    if (!admin) {
+      return res.status(404).json({ error: 'admin not found' });
     }
 
     const coinString = betCoins.toString();
@@ -850,7 +1045,10 @@ exports.teenPatti = async(req,res)=>{
         return res.status(400).send('You don\'t have enough coins');
       }
     }
-    
+    //all has coins so give them to admin
+    const admincoins = (users.length )* betcoins
+    admin.coins+=admincoins
+    await admin.save()
     if(!gameStartTime){
        gameStartTime=new Date();
     }
@@ -1004,6 +1202,8 @@ let rewardedCoins=0
             userBeforeCoins = winuser.coins
             winuser.coins*=2.9 
             rewardedCoins= winuser.coins - userBeforeCoins
+            admin.coins-=rewardedCoins
+            await admin.save()
             winuser.teenPattiTrans.push({seatName:"SeatA",collectedCoins:rewardedCoins})
 
              await winuser.save()
@@ -1029,6 +1229,8 @@ let rewardedCoins=0
         winuser.coins*=2.9
         rewardedCoins= winuser.coins - userBeforeCoins
         console.log('rewarded coins', rewardedCoins)
+        admin.coins-=rewardedCoins
+        await admin.save()
         winuser.teenPattiTrans.push({seatName:"SeatB",collectedCoins:rewardedCoins})
          await winuser.save()
         }
@@ -1052,6 +1254,8 @@ let rewardedCoins=0
         winuser.coins*=2.9
         rewardedCoins= winuser.coins - userBeforeCoins
         console.log('rewarded coins', rewardedCoins)
+        admin.coins-=rewardedCoins
+        await admin.save()
         winuser.teenPattiTrans.push({seatName:"SeatC",collectedCoins:rewardedCoins})
          await winuser.save()
         }
@@ -1213,6 +1417,7 @@ exports.coinsCollectedThroughFruitGame= async(req,res)=>{
       }
      const user = User.findOne({phoneNo:oldphoneNo})
        user.phoneNo= newPhoneNo
+       user.verifyCount+=1
        await user.save()
       return res.status(200).json({msg:"changed your phone no ",user})
     } catch (error) {
@@ -1438,5 +1643,302 @@ exports.unFriend = async(req,res)=>{
   } catch (error) {
     console.log(error.message)
     return res.status(400).json({MSG:"ERRor"})
+  }
+}
+
+exports.getUsersMonth = async (req, res) => {
+  try {
+    const users = await User.find({});
+    
+    const currentMonth=new Date().getMonth()
+    const currentYear=new Date().getFullYear()
+    const monthUsers = users.filter((user) => {
+      const userDate = new Date(user.time);
+      return (
+        userDate.getMonth() === currentMonth && // Month is 0-indexed
+        userDate.getFullYear() === currentYear     //year of the month
+      );
+    });
+
+    // // Map the users to include only the desired fields
+    // const simplifiedUsers = monthUsers.map((user) => ({
+    //   _id: user._id,
+    //   name: user.name,
+    //   email: user.email,
+    //   password: user.password,
+    //   phoneNo: user.phoneNo,
+     
+  
+    //   coins: user.coins,
+    //   gender: user.gender,
+    //   country: user.country,
+    //   relationship: user.relationship,
+    //   googleId: user.googleId,
+    //   googlePass: user.googlePass,
+    //   facebookId: user.facebookId,
+    //   facebookPass: user.facebookPass,
+    //   twitterId: user.twitterId,
+    //   twitterPass: user.twitterPass,
+    //   profilePic: user.profilePic,
+    //   coverPic: user.coverPic,
+    //   coverPhoto: user.coverPhoto,
+     
+    //   time: user.time
+    // }));
+
+ return   res.json({msg:`users this month: ${monthUsers.length}`});
+  } catch (error) {
+    console.log(error.message);
+    return res.status(400).json({ MSG: "Error" });
+  }
+};
+
+
+exports.getBanUsersMonth = async (req, res) => {
+  try {
+    const users = await User.find({});
+    
+    const currentMonth=new Date().getMonth()
+    const currentYear=new Date().getFullYear()
+    const monthUsers = users.filter((user) => {
+      const userDate = new Date(user.time);
+      return (
+        userDate.getMonth() === currentMonth && // Month is 0-indexed
+        userDate.getFullYear() === currentYear  &&
+        user.isBan=== true  
+      );
+    });
+
+  res.json({msg:` ban users this month: ${monthUsers.length}`});
+  } catch (error) {
+    console.log(error.message);
+    return res.status(400).json({ MSG: "Error" });
+  }
+};
+
+exports.getVipUsersMonth = async (req, res) => {
+  try {
+    const users = await User.find({});
+    
+    const currentMonth=new Date().getMonth()
+    const currentYear=new Date().getFullYear()
+    const monthUsers = users.filter((user) => {
+      const userDate = new Date(user.time);
+      return (
+        userDate.getMonth() === currentMonth && // Month is 0-indexed
+        userDate.getFullYear() === currentYear  &&
+        user.isVIP=== true  
+      );
+    });
+
+  res.json({msg:` vip users this month: ${monthUsers.length}`});
+  } catch (error) {
+    console.log(error.message);
+    return res.status(400).json({ MSG: "Error" });
+  }
+};
+
+
+exports.gameCoinsGivenThisMonth= async(req,res)=>{
+  try {
+        const users = await User.find({});
+    
+    const currentMonth=new Date().getMonth()
+    const currentYear=new Date().getFullYear()
+    const monthUsers = users.filter((user) => {
+      const userDate = new Date(user.time);
+      return (
+        userDate.getMonth() === currentMonth && // Month is 0-indexed
+        userDate.getFullYear() === currentYear
+      );
+    });
+    
+   let monthCoins =0
+   monthUsers.map((user)=>{
+    user.transactions.map((trans)=>{
+      if('card' in trans){//its game trans
+        monthCoins+=trans.collectedCoins
+      }})
+      user.teenPattiTrans.map((trans)=>{
+        monthCoins+=trans.collectedCoins
+     })
+
+   })
+ 
+ return res.status(200).json(`coins won through this month are ${monthCoins}`)
+   
+
+  } catch (error) {
+    res.json(error)
+  }
+}
+
+exports.giftCoinsGivenThisMonth= async(req,res)=>{
+try {
+        const users = await User.find({});
+    
+    const currentMonth=new Date().getMonth()
+    const currentYear=new Date().getFullYear()
+    const monthUsers = users.filter((user) => {
+      const userDate = new Date(user.time);
+      return (
+        userDate.getMonth() === currentMonth && // Month is 0-indexed
+        userDate.getFullYear() === currentYear
+      );
+    });
+    
+   let monthCoins =0
+   monthUsers.filter((user)=>{
+      user.transactions.map(()=>{
+        if(!('card' in trans)){
+          monthCoins+=trans.collectedCoins
+        }
+      })
+   })
+// console.log(monthCoins)
+ return res.status(200).json(`coins given through gift this month are ${monthCoins}`)
+   
+
+  } catch (error) {
+    res.json(error)
+  }
+}
+
+exports.getRechargeCoinsFromRewards= async(req,res)=>{
+  try {
+    const{userid,adminid}= req.body
+        
+     const user =await User.findById(userid)
+     const admin =await User.findById(adminid)
+    let rechargeCoins =0
+     if(user.rewards.length >0){   //if user has something in rewards
+       rechargeCoins+= (user.rewards.length)*500
+       admin.rewards.push(...user.rewards)//give users reward to admin and empty users rewrd
+       user.rewards=[]
+     }
+    if(user.myStore.length>0){
+      rechargeCoins+=(user.myStore.length)*1000// if has store irems also.calculare coins againt items
+      admin.myStore.push(...user.myStore)
+      user.myStore=[]  //empty users store and push those irems to admin
+    }
+    if(rechargeCoins == 0){  // if no coins are made means both store reward empty
+      res.json({msg:`you dont have any rewards or items in store.to get coins,try another methods`})
+    }
+    user.coins+=rechargeCoins//give coins to user otherwise and save record also
+    const rechargeRecord={
+      userid,
+      rechargeCoinsTaken:rechargeCoins,
+      rechargeTrans:"yes",
+      rewardsTaken:user.rewards,
+      storeItemsTaken:user.myStore,
+      timestamp: new Date()
+    }
+    user.transactions.push(rechargeRecord)
+    await user.save()
+
+    admin.coin-=rechargeCoins  //deduct admin coins and save record what given what taken.save
+    const arechargeRecord={
+      userid,
+      rechargeCoinsGiven:rechargeCoins,
+      rechargeTrans:"yes",
+      rewardsTaken:user.rewards,
+      storeItemsTaken:user.myStore,
+      timestamp: new Date()
+    }
+    admin.transactions.push(arechargeRecord)
+    await admin.save()
+
+     return res.json({msg:`you are awarded with ${rechargeCoins} coins in return to ur total rewards and store itmes`})
+  } catch (error) {
+    res.json(error)
+  }
+}
+
+exports.totalRechargeCoinsGivenMonth=async(req,res)=>{
+  try {
+      const {adminid}=req.body
+      const admin= await User.findById(adminid)
+      if(!admin){
+       return res.json({msg:`no  admin found`})
+      }
+      
+      const users = await User.find({});
+    
+      const currentMonth=new Date().getMonth()
+      const currentYear=new Date().getFullYear()
+      const monthUsers = users.filter((user) => {
+        const userDate = new Date(user.time);
+        return (
+          userDate.getMonth() === currentMonth && // Month is 0-indexed
+          userDate.getFullYear() === currentYear
+        );
+      });
+       
+    let monthCoins=0
+
+    monthUsers.map((user)=>{
+      user.transactions.map((trans)=>{
+        if('rechargeTrans' in trans){
+          monthCoins+=trans.rechargeCoinsTaken
+        }
+      })
+    })
+ return res.json({msg:`total recharge coins given this month are ${monthCoins}`})
+  } catch (error) {
+    res.json(error)
+    console.log(error)
+  }
+}
+
+exports.getVerificationsThisMonth = async (req,res)=>{
+  try {
+          
+    const users = await User.find({});
+    
+    const currentMonth=new Date().getMonth()
+    const currentYear=new Date().getFullYear()
+    const monthUsers = users.filter((user) => {
+      const userDate = new Date(user.time);
+      return (
+        userDate.getMonth() === currentMonth && // Month is 0-indexed
+        userDate.getFullYear() === currentYear
+      );
+    });
+     
+  let monthCount=0
+  monthUsers.map((user)=>{
+    monthCount+=user.verifyCount
+  })
+  return res.json({msg:`verifications this month are ${monthCount}`})
+  } catch (error) {
+    res.json(error)
+    console.log(error)
+  }
+}
+
+exports.getAdminsThisMonth=async(req,res)=>{
+  try {
+    const users = await User.find({});
+    
+    const currentMonth=new Date().getMonth()
+    const currentYear=new Date().getFullYear()
+    const monthUsers = users.filter((user) => {
+      const userDate = new Date(user.time);
+      return (
+        userDate.getMonth() === currentMonth && // Month is 0-indexed
+        userDate.getFullYear() === currentYear
+      );
+    });
+
+  let adminCount=0
+  monthUsers.map((user)=>{
+     if(user.role=="admin"){
+      adminCount+=1
+     }
+  })
+   return res.status(200).json({msg:`admins created this month are: ${adminCount}`})
+  } catch (error) {
+    res.json(error)
+    console.log(error)
   }
 }

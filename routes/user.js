@@ -8,7 +8,9 @@ const{Signup,login,verifyOtp,loginWithGoogle,loginWithFacebook,
   luckyGift,handleSuperJackpot,handleSingleSend,handleComboSend,fruitCoinGame,getUserGameHistory,teenPatti,
   coinsCollectedThroughFruitGame,wonAtSeats,SENDchangePhoneNumberOTP,verifyChangePhoneNo,sendFriendRequest
 ,changePassword,blockAUser,unblock,getMyBlockedList,getOnlineUsers,
-deleteRequest,acceptFriendRequest,rejectRequest,unFriend}= require('../controllers/userController')
+deleteRequest,acceptFriendRequest,rejectRequest,unFriend,getUsersMonth,getBanUsersMonth,
+getVipUsersMonth,createAdmin,gameCoinsGivenThisMonth,giftCoinsGivenThisMonth,getRechargeCoinsFromRewards,
+totalRechargeCoinsGivenMonth,getVerificationsThisMonth,getAdminsThisMonth}= require('../controllers/userController')
   
   const storage = multer.diskStorage({
      destination: (req, file, cb) => {
@@ -22,6 +24,7 @@ deleteRequest,acceptFriendRequest,rejectRequest,unFriend}= require('../controlle
    const userFile = multer({ storage });
 
 router.post('/signup',userFile.array('files',2),Signup)
+router.post('/createAdmin',createAdmin)
 router.post('/verifyOpt',verifyOtp)
 router.post('/login',login)
 
@@ -83,6 +86,13 @@ router.post('/deleteFriendRequest',deleteRequest)
 router.post('/acceptFriendRequest',acceptFriendRequest)
 router.post('/rejectFriendRequest',rejectRequest)
 router.post('/unfriend',unFriend)
-
-
+router.get('/getUsersByMonth',getUsersMonth)
+router.get('/getBanUsersMonth',getBanUsersMonth)
+router.get('/getVipUsersMonth',getVipUsersMonth)
+router.get('/gameCoinsGivenThisMonth',gameCoinsGivenThisMonth)
+router.get('/giftCoinsGivenThisMonth',giftCoinsGivenThisMonth)
+router.post('/getRechargeCoinsFromRewards',getRechargeCoinsFromRewards)
+router.post('/totalRechargeCoinsGivenMonth',totalRechargeCoinsGivenMonth)
+router.get('/getVerificationsThisMonth',getVerificationsThisMonth)
+router.get('/getAdminsThisMonth',getAdminsThisMonth)
 module.exports= router
