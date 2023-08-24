@@ -16,10 +16,10 @@ const { setBoxProbabilities,getBoxProbabilities } = require('../middleware/winMi
 exports.Signup = async (req,res)=>{
 
     const {name,email,password,phoneNo,gender,country,interest,relationship,isVIP,coins,isBan}=req.body;
-    const {profilePic,coverPic }= req.body
+    // const {profilePic,coverPic }= req.body
     
-    // const  profilePic= req.files[0].path
-    // const  coverPic= req.files[1].path
+    const  profilePic= req.files[0].path
+    const  coverPic= req.files[1].path
     try{
       
        if(!email || !password ){

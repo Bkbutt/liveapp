@@ -11,8 +11,8 @@ try {
         return res.status(400).json({error:"post cant be empty or userid not given"})
     }
     // console.log(req.file)
-    // const postFile = req.file.path;//file upload either pic audio video
-   const post = new Post({userid:userid,postType,content,category,stickers,tags,likes,comments,copyLink
+    const postFile = req.file.path;//file upload either pic audio video
+   const post = new Post({userid:userid,postType,postFile,content,category,stickers,tags,likes,comments,copyLink
                           ,noOfShares,noOfreports,location,postUploadTime,downloadPost})
 
     await post.save()                    
