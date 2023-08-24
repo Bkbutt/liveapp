@@ -1,5 +1,6 @@
 const express=require('express')
 const User = require('../models/userModel')
+const Post = require('../models/postModel')
 const passport = require('passport');
 const crypto = require('crypto')
 const twilio= require('twilio')
@@ -11,7 +12,7 @@ const FacebookStrategy = require('passport-facebook').Strategy;
 const { sendNotification } = require('../notifications/notificationService');
 const { readlinkSync } = require('fs');
 const _ = require('underscore');
-
+const { setBoxProbabilities,getBoxProbabilities } = require('../middleware/winMiddle');
 exports.Signup = async (req,res)=>{
 
     const {name,email,password,phoneNo,gender,country,interest,relationship,isVIP,coins,isBan}=req.body;
@@ -324,12 +325,12 @@ exports.deleteuser = async(req,res)=>{
 
 exports.likeUser = async(req,res)=>{
   try {
-      const {userId} = req.params
-       const{fanId}= req.body;
-        const user = await User.findOne({userId})
+      
+       const{userId,fanId}= req.body;
+        const user = await User.findById(userId)
         // if(!user) 
         //  { return res.status(400).send("no such user exists")}
-        const fan = await User.findOne(fanId);
+        const fan = await User.findById(fanId);
         // if(!fan)
         //    { return res.status(400).send("no such fan user exists")}
         console.log('user is',user)
@@ -1165,8 +1166,17 @@ exports.teenPatti = async(req,res)=>{
     const competingCards = [firstBox,secondBox,thirdBox]
     
      console.log("compieting cards are",competingCards)
- 
-     const currentTimeAfterBetting = new Date();
+     // Calculate the probability of each box winning
+  const totalPower = competingCards.reduce((total, card) => total + card.power, 0);
+  const boxProbabilities = competingCards.map((card) => ({
+    box: card.boxNo,
+    probability: (card.power / totalPower) * 100,
+    
+  })) 
+
+   
+   setBoxProbabilities(boxProbabilities);//global func from middleware
+    const currentTimeAfterBetting = new Date();
      const elapsedTimeSecondsAfterBetting = Math.floor((currentTimeAfterBetting - gameStartTime) / 1000);
      if (elapsedTimeSecondsAfterBetting >= SECONDS_FOR_BETTING + SECONDS_FOR_CARD_SHOW) {
        return res.status(401).json({ message: "Card show time is over" });
@@ -1180,7 +1190,7 @@ exports.teenPatti = async(req,res)=>{
      let winnerBox={}
     competingCards.map((card)=>{
         if(winner < card.power)
-        {  winner=card.power
+        {  winner=card.power 
           winnerBox= card
           winIndex= competingCards.indexOf(card)
           }
@@ -1267,7 +1277,7 @@ let rewardedCoins=0
          await lostuser.save() 
         }
       }
-    
+     
      }
   
 
@@ -1279,19 +1289,36 @@ let rewardedCoins=0
      const elapsedTimeSecondsAfterCardShow = Math.floor((currentTimeAfterCardShow - gameStartTime) / 1000);
      if (elapsedTimeSecondsAfterCardShow >= SECONDS_FOR_BETTING + SECONDS_FOR_CARD_SHOW + SECONDS_FOR_USER_SHOW) {
        return res.status(200).json({ message: "User show time is over" });
-       //  Perform the user show phase (waiting for the remaining user show time)
-          await wait(SECONDS_FOR_USER_SHOW);
- }
+      }
+      
+      //  Perform the user show phase (waiting for the remaining user show time)
+         await wait(SECONDS_FOR_USER_SHOW);
 
 
-
-   res.status(200).json({message:`Compeiting cards and the winner card User with max power is `,competingCards,winnerBox,winBoxNumber,winUsers})
+   res.status(200).json({message:`Compeiting cards and the winner card User with max power is `,boxProbabilities,competingCards,winnerBox,winBoxNumber,winUsers})
 
   } catch (error) {
     console.log(error)
     res.status(400).json({error})
   }
 }
+
+exports.prediction = async (req, res) => {
+  try {
+    const boxProbabilities = getBoxProbabilities(); //returns array
+    const seatProbabilities = boxProbabilities.map((box,index) => 
+     ( {
+    [`seat ${String.fromCharCode(97+index)}`]: `${box.probability}%`,
+      } )
+    );
+    res.status(200).json( seatProbabilities );
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({ error });
+  }
+};
+
+
 
 exports.coinsCollectedThroughFruitGame= async(req,res)=>{
   try {
@@ -1941,4 +1968,129 @@ exports.getAdminsThisMonth=async(req,res)=>{
     res.json(error)
     console.log(error)
   }
+}
+
+exports.friendSuggestion=async(req,res)=>{
+  try {
+    
+    function mixAndMatchPosts(arr1, arr2,arr3,arr4) {
+      const mixedPosts = [];
+      const minLength = Math.min(arr1.length, arr2.length,arr3.length,arr4.length);
+      
+      for (let i = 0; i < minLength; i++) {
+          mixedPosts.push(arr1[i]);
+          mixedPosts.push(arr4[i])
+          mixedPosts.push(arr2[i]);
+          mixedPosts.push(arr3[i])
+      }
+    // If one array is longer than the other, add the remaining posts
+      mixedPosts.push(...arr1.slice(minLength));
+      mixedPosts.push(...arr3.slice(minLength))
+      mixedPosts.push(...arr2.slice(minLength));
+      mixedPosts.push(...arr4.slice(minLength))
+      return mixedPosts;
+  }
+   function makeArraysDistinct(arr1, arr2, arr3, arr4) {
+  // Combine all arrays into a single array
+  const combinedArray = [...arr1, ...arr2, ...arr3, ...arr4];
+
+  // Create a set to automatically remove duplicates
+  const uniqueSet = new Set(combinedArray);
+  const distinctArray = Array.from(uniqueSet);
+
+  // Determine the number of elements to distribute evenly among the four arrays
+  const numElementsPerArray = Math.floor(distinctArray.length / 4);
+  const newArray1 = distinctArray.slice(0, numElementsPerArray);
+  const newArray2 = distinctArray.slice(numElementsPerArray, 2 * numElementsPerArray);
+  const newArray3 = distinctArray.slice(2 * numElementsPerArray, 3 * numElementsPerArray);
+  const newArray4 = distinctArray.slice(3 * numElementsPerArray);
+
+  return [newArray1, newArray2, newArray3, newArray4];
+}
+  const {userid} = req.body
+    const user = await User.findById(userid)
+    //friends of friends
+    let fofs = new Set()
+    const userFriends=user.friends
+     for(const friend of userFriends ){
+                                            //return his friends 
+         const myFriend =await User.findById(friend._id)
+         let fofss =myFriend.friends 
+        for(const fof of fofss ){
+        const FOF = await User.findById(fof._id)
+        fofs.add(FOF)
+        }
+     }
+     const arrayOfFriendsOfFriends = Array.from(fofs);
+
+     //country people find
+     let countrySet=new Set()
+     const users = await User.find({})
+      for(const countryUser of users){
+        if(countryUser.country == user.country &&  !(user.friends.includes(countryUser))){
+         countrySet.add(countryUser)
+        }
+      }
+      const countryPeople= Array.from(fofs)
+
+      //postsn people liked by me
+      const posts = await Post.find({})
+      let likedSet=new Set()
+      for (const post of posts){
+
+        const poste= await Post.findById(post._id)
+        
+        const postUser= await User.findById(poste.userid)
+        const isLikedByMe = post.likes.map((like) => { like._id == user._id})
+        if(isLikedByMe.length>0){
+          likedSet.add(postUser)
+        }
+      }
+      const likedUserArray= Array.from(likedSet)
+
+    //post users on which i comment
+    let commentSet= new Set()
+    for (const post of posts){
+      const postC = await Post.findById(post._id)
+      const postUser= await User.findById(postC.userid)
+      const isCommentedByMe =post.comments.map((comment) =>  comment.user._id == user._id)
+      if(isCommentedByMe.length>0){
+        commentSet.add(postUser)
+      }
+    }
+    const commentUserArray = Array.from(commentSet)
+  
+  
+    
+    const  allArrays = makeArraysDistinct(arrayOfFriendsOfFriends,countryPeople,likedUserArray,commentUserArray);
+    const fofSize =allArrays[0].length
+    const shuffledFriendsOfFriends= allArrays[0].sort(()=> Math.random()-0.5)
+    const CountryPeopleCount = allArrays[1].length
+    const shuffledCountryPeople = allArrays[1].sort(()=>Math.random()-0.5)
+    const likedPeopleCount = allArrays[2].length
+    const shuffledPostUsers= allArrays[2].sort(()=> Math.random()-0.5 )
+    const commentPeopleCount = allArrays[3].length
+    const shuffledCPostUsers= allArrays[3].sort(()=> Math.random()-0.5 ) 
+
+    const TotalArrayCount =fofSize+CountryPeopleCount+likedPeopleCount+commentPeopleCount
+    const fofPer = Math.floor((40/TotalArrayCount)*100)
+    const countryPer= Math.floor((30/TotalArrayCount)*100)
+    const likePer = Math.floor((10/TotalArrayCount)*100)
+    const commentPer = Math.floor((20/TotalArrayCount)*100)
+
+    const friendsOfFriends= shuffledFriendsOfFriends.slice(0,fofPer)
+    // console.log('fof',friendsOfFriends)//see friends of friends in suggestios
+    const countryPeopleArray = shuffledCountryPeople.slice(0,countryPer)
+    // console.log('country',countryPeopleArray)//see country users sugested
+    const postUsers= shuffledPostUsers.slice(0,likePer)
+    // console.log('postuser',postUsers)// sugestio of users i like their posts
+    const commentUsers= shuffledCPostUsers.slice(0,commentPer)
+    // console.log('commentusers',commentUsers) //users suggestred,which i left any comment to
+
+    const friendSuggestions = mixAndMatchPosts(friendsOfFriends,countryPeopleArray,postUsers,commentUsers);
+    return res.status(200).json(friendSuggestions)
+
+}catch(error){
+res.json(error)
+console.log(error)}
 }

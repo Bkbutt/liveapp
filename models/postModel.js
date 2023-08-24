@@ -14,10 +14,16 @@ const postModel =mongoose.Schema({
  noOfShares:{type: [  { type: mongoose.Schema.Types.ObjectId,ref: 'User'}]},
  noOfReports:{type: [  { type: mongoose.Schema.Types.ObjectId,ref: 'User'}]},
  location:{type:String,  immutable: false},
- postUploadTime:{type:Date,default:new Date()},
- downloadPost:{type:String}
+ downloadPost:{type:String},
+ time:{type: String, default: null}
  
 },  {
     timestamps: true,
 })
+postModel.pre('save', function(next) {
+    if (this.isNew) {
+      this.time = new Date().toString();
+    }
+    next();
+  });
 module.exports= mongoose.model('Post',postModel)

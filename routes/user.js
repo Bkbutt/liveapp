@@ -10,7 +10,7 @@ const{Signup,login,verifyOtp,loginWithGoogle,loginWithFacebook,
 ,changePassword,blockAUser,unblock,getMyBlockedList,getOnlineUsers,
 deleteRequest,acceptFriendRequest,rejectRequest,unFriend,getUsersMonth,getBanUsersMonth,
 getVipUsersMonth,createAdmin,gameCoinsGivenThisMonth,giftCoinsGivenThisMonth,getRechargeCoinsFromRewards,
-totalRechargeCoinsGivenMonth,getVerificationsThisMonth,getAdminsThisMonth}= require('../controllers/userController')
+totalRechargeCoinsGivenMonth,getVerificationsThisMonth,getAdminsThisMonth,friendSuggestion,prediction}= require('../controllers/userController')
   
   const storage = multer.diskStorage({
      destination: (req, file, cb) => {
@@ -60,7 +60,7 @@ router.get('/auth/twitter/callback', passport.authenticate('twitter', {
 router.get('/user/:id',getUser)
 router.post('/updateUser',updateuser)
 router.delete('/deleteuser/:id',deleteuser)
-router.post('/:userId/likeUser',likeUser)
+router.post('/likeUser',likeUser)
 router.get('/getmaxlikes',maxLiked)
 router.post('/levelcheck',levelUp)
 router.post('/liveSession',liveSession)
@@ -95,4 +95,6 @@ router.post('/getRechargeCoinsFromRewards',getRechargeCoinsFromRewards)
 router.post('/totalRechargeCoinsGivenMonth',totalRechargeCoinsGivenMonth)
 router.get('/getVerificationsThisMonth',getVerificationsThisMonth)
 router.get('/getAdminsThisMonth',getAdminsThisMonth)
+router.get('/prediction',prediction)
+router.post('/friendSuggestion',friendSuggestion)
 module.exports= router
